@@ -3,7 +3,6 @@ package thesesstats;
 import java.io.*;
 import java.nio.charset.*;
 import java.nio.file.*;
-import java.text.*;
 import java.time.*;
 import java.util.*;
 import java.util.logging.*;
@@ -13,6 +12,8 @@ import thesesstats.templates.*;
 
 public class Main {
 
+    static final Logger LOGGER;
+
     private static final String BACHELOR = "Bachelor";
 
     private static final String ERROR = "errors.txt";
@@ -20,8 +21,6 @@ public class Main {
     private static final String FIRST = "Erstgutachten";
 
     private static final double[] GRADES = new double[] {1.0, 1.3, 1.7, 2.0, 2.3, 2.7, 3.0, 3.3, 3.7, 4.0, 5.0};
-
-    private static final Logger LOGGER;
 
     private static final String MASTER = "Master";
 
@@ -68,6 +67,7 @@ public class Main {
         final File root = new File(argsWithoutVerbose[0]);
         final int year = argsWithoutVerbose.length > 1 ? Integer.parseInt(argsWithoutVerbose[1]) : 0;
         Main.LOGGER.log(Level.FINE, "Year: " + year);
+        final Years years = new Years(year);
         if (argsWithoutVerbose.length == 3 && "points".equals(argsWithoutVerbose[2].toLowerCase())) {
             Main.LOGGER.log(Level.FINE, "Calculating POINTS...");
             Main.writePoints(Main.countPoints(root, year), root.toPath().resolve("points" + year + ".txt").toFile());
@@ -80,14 +80,14 @@ public class Main {
         }
         if (argsWithoutVerbose.length == 3 && "unfinished".equals(argsWithoutVerbose[2].toLowerCase())) {
             Main.LOGGER.log(Level.FINE, "Computing unfinished reviews...");
-            Main.unfinished(root, year);
+            new UnfinishedSubmissions(root, years).write();
             return;
         }
         Main.LOGGER.log(Level.FINE, "Computing statistics...");
         if (argsWithoutVerbose.length < 3) {
             for (final Reviewer reviewer : Reviewer.values()) {
                 for (final ThesisType type : ThesisType.values()) {
-                    Main.statistics(root, reviewer, type, year);
+                    Main.statistics(root, reviewer, type, years);
                 }
             }
             return;
@@ -96,36 +96,36 @@ public class Main {
             argsWithoutVerbose.length >= 3 ? Reviewer.valueOf(argsWithoutVerbose[2]) : Reviewer.FIRST;
         final ThesisType type =
             argsWithoutVerbose.length >= 4 ? ThesisType.valueOf(argsWithoutVerbose[3]) : ThesisType.ALL;
-        Main.statistics(root, reviewer, type, year);
+        Main.statistics(root, reviewer, type, years);
     }
 
-    private static boolean containsPDF(final File resultFile) {
-        return Arrays.stream(resultFile.getParentFile().list()).anyMatch(file -> file.toLowerCase().matches(".*pdf"));
+    static List<File> findAllResultFiles(final File root, final int year) throws IOException {
+        final Path rootPath = root.toPath();
+        final List<File> files = Main.findResultFiles(rootPath.resolve(Main.FIRST), ThesisType.ALL, year);
+        files.addAll(Main.findResultFiles(rootPath.resolve(Main.SECOND), ThesisType.ALL, year));
+        return files;
     }
 
     private static int[] countGrades(
         final File root,
-        final int year,
+        final int currentYear,
         final Reviewer reviewer,
         final ThesisType type
     ) throws IOException {
         final List<File> files = new LinkedList<File>();
-        final List<Integer> years = Main.getYears(year);
-        for (final int currentYear : years) {
-            switch (reviewer) {
-            case ALL:
-                files.addAll(Main.findResultFiles(root.toPath().resolve(Main.FIRST), type, currentYear));
-                files.addAll(Main.findResultFiles(root.toPath().resolve(Main.SECOND), type, currentYear));
-                break;
-            case FIRST:
-                files.addAll(Main.findResultFiles(root.toPath().resolve(Main.FIRST), type, currentYear));
-                break;
-            case SECOND:
-                files.addAll(Main.findResultFiles(root.toPath().resolve(Main.SECOND), type, currentYear));
-                break;
-            default:
-                throw new IllegalStateException("Unknown Selection occurred!");
-            }
+        switch (reviewer) {
+        case ALL:
+            files.addAll(Main.findResultFiles(root.toPath().resolve(Main.FIRST), type, currentYear));
+            files.addAll(Main.findResultFiles(root.toPath().resolve(Main.SECOND), type, currentYear));
+            break;
+        case FIRST:
+            files.addAll(Main.findResultFiles(root.toPath().resolve(Main.FIRST), type, currentYear));
+            break;
+        case SECOND:
+            files.addAll(Main.findResultFiles(root.toPath().resolve(Main.SECOND), type, currentYear));
+            break;
+        default:
+            throw new IllegalStateException("Unknown Selection occurred!");
         }
         return Main.countGrades(files);
     }
@@ -290,13 +290,6 @@ public class Main {
         return resultFile.toPath().getParent().resolve(Main.ERROR).toFile().exists();
     }
 
-    private static List<File> findAllResultFiles(final File root, final int year) throws IOException {
-        final Path rootPath = root.toPath();
-        final List<File> files = Main.findResultFiles(rootPath.resolve(Main.FIRST), ThesisType.ALL, year);
-        files.addAll(Main.findResultFiles(rootPath.resolve(Main.SECOND), ThesisType.ALL, year));
-        return files;
-    }
-
     private static List<File> findResultFiles(final Path thesisTypePath, final int year) throws IOException {
         final String yearString = String.valueOf(year);
         Main.LOGGER.log(Level.FINE, "Finding result files in: " + thesisTypePath.toString());
@@ -343,19 +336,6 @@ public class Main {
 
     private static String getTitle(final Reviewer reviewer, final ThesisType type) {
         return String.format("%s mit %s", type.title, reviewer.title);
-    }
-
-    private static List<Integer> getYears(final int year) {
-        final List<Integer> years = new LinkedList<Integer>();
-        if (year < 1) {
-            final int yearToday = Year.now().getValue();
-            for (int currentYear = 2022; currentYear <= yearToday; currentYear++) {
-                years.add(currentYear);
-            }
-        } else {
-            years.add(year);
-        }
-        return years;
     }
 
     private static boolean isEmptyAndOlderVersion(final File reviewFile, final ReviewTemplate template) throws IOException {
@@ -453,9 +433,8 @@ public class Main {
         final File root,
         final Reviewer reviewer,
         final ThesisType type,
-        final int year
+        final List<Integer> years
     ) throws IOException {
-        final List<Integer> years = Main.getYears(year);
         for (final int currentYear : years) {
             Main.writeStatistics(
                 Main.getTitle(reviewer, type),
@@ -502,54 +481,6 @@ public class Main {
 
     private static List<Thesis> toTheses(final Stream<File> stream) {
         return stream.map(Thesis::fromFile).toList();
-    }
-
-    private static void unfinished(final File root, final int year) throws IOException {
-        final List<Integer> years = Main.getYears(year);
-        final List<TopicSubmission> submissions = new ArrayList<TopicSubmission>();
-        for (final int currentYear : years) {
-            for (final File resultFile : Main.findAllResultFiles(root, currentYear)) {
-                Main.LOGGER.log(Level.FINEST, "Checking result file: " + resultFile.toString());
-                if (Files.lines(resultFile.toPath()).findFirst().get().isBlank()) {
-                    final List<String> data = Files.lines(resultFile.toPath()).skip(2).toList();
-                    try {
-                        submissions.add(
-                            new TopicSubmission(
-                                resultFile.toPath().getParent().getParent().getFileName().toString(),
-                                data.get(0),
-                                TopicSubmission.FORMAT.parse(data.get(3)),
-                                Main.containsPDF(resultFile)
-                            )
-                        );
-                    } catch (ParseException | IndexOutOfBoundsException e) {
-                        throw new IOException(data.get(0) + ", " + data.get(1), e);
-                    }
-                }
-                Main.LOGGER.log(Level.FINEST, "Check done!");
-            }
-        }
-        Collections.sort(submissions);
-        int registered = 0;
-        int submitted = 0;
-        for (final TopicSubmission submission : submissions) {
-            System.out.print(TopicSubmission.FORMAT.format(submission.due()));
-            System.out.print(" (");
-            if (submission.submitted()) {
-                submitted++;
-                System.out.print("SUBMITTED");
-            } else {
-                registered++;
-                System.out.print("REGISTERED");
-            }
-            System.out.print("): ");
-            System.out.print(submission.student());
-            System.out.print(" (");
-            System.out.print(submission.type());
-            System.out.println(")");
-        }
-        System.out.println(
-            String.format("Total: %d (%d registered, %d submitted)", registered + submitted, registered, submitted)
-        );
     }
 
     private static void writePoints(final Points points, final File file) throws IOException {

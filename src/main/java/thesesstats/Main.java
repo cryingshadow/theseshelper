@@ -66,7 +66,7 @@ public class Main {
         }
         Main.LOGGER.log(Level.FINE, "Root file: " + argsWithoutVerbose[0]);
         final File root = new File(argsWithoutVerbose[0]);
-        final int year = argsWithoutVerbose.length > 1 ? Integer.parseInt(argsWithoutVerbose[1]) : -1;
+        final int year = argsWithoutVerbose.length > 1 ? Integer.parseInt(argsWithoutVerbose[1]) : 0;
         Main.LOGGER.log(Level.FINE, "Year: " + year);
         if (argsWithoutVerbose.length == 3 && "points".equals(argsWithoutVerbose[2].toLowerCase())) {
             Main.LOGGER.log(Level.FINE, "Calculating POINTS...");
@@ -110,9 +110,8 @@ public class Main {
         final ThesisType type
     ) throws IOException {
         final List<File> files = new LinkedList<File>();
-        final int fromYear = year > 0 ? year : 2022;
-        final int toYear = year > 0 ? year : Year.now().getValue();
-        for (int currentYear = fromYear; currentYear <= toYear; currentYear++) {
+        final List<Integer> years = Main.getYears(year);
+        for (final int currentYear : years) {
             switch (reviewer) {
             case ALL:
                 files.addAll(Main.findResultFiles(root.toPath().resolve(Main.FIRST), type, currentYear));
@@ -346,6 +345,19 @@ public class Main {
         return String.format("%s mit %s", type.title, reviewer.title);
     }
 
+    private static List<Integer> getYears(final int year) {
+        final List<Integer> years = new LinkedList<Integer>();
+        if (year < 1) {
+            final int yearToday = Year.now().getValue();
+            for (int currentYear = 2022; currentYear <= yearToday; currentYear++) {
+                years.add(currentYear);
+            }
+        } else {
+            years.add(year);
+        }
+        return years;
+    }
+
     private static boolean isEmptyAndOlderVersion(final File reviewFile, final ReviewTemplate template) throws IOException {
         final List<String> firstTwoLines = Files.lines(reviewFile.toPath()).limit(2).toList();
         return "%empty".equals(firstTwoLines.get(1)) && template.isOlderVersion(firstTwoLines.get(0).substring(10));
@@ -443,9 +455,8 @@ public class Main {
         final ThesisType type,
         final int year
     ) throws IOException {
-        final int fromYear = year == -1 ? 2022 : year;
-        final int toYear = year == -1 ? Year.now().getValue() : year;
-        for (int currentYear = fromYear; currentYear <= toYear; currentYear++) {
+        final List<Integer> years = Main.getYears(year);
+        for (final int currentYear : years) {
             Main.writeStatistics(
                 Main.getTitle(reviewer, type),
                 currentYear,
@@ -494,15 +505,7 @@ public class Main {
     }
 
     private static void unfinished(final File root, final int year) throws IOException {
-        final List<Integer> years = new LinkedList<Integer>();
-        if (year == 0) {
-            final int yearToday = Year.now().getValue();
-            for (int currentYear = 2022; currentYear <= yearToday; currentYear++) {
-                years.add(currentYear);
-            }
-        } else {
-            years.add(year);
-        }
+        final List<Integer> years = Main.getYears(year);
         final List<TopicSubmission> submissions = new ArrayList<TopicSubmission>();
         for (final int currentYear : years) {
             for (final File resultFile : Main.findAllResultFiles(root, currentYear)) {

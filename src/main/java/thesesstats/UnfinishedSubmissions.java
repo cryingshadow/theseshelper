@@ -2,7 +2,6 @@ package thesesstats;
 
 import java.io.*;
 import java.nio.file.*;
-import java.text.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -23,11 +22,32 @@ public class UnfinishedSubmissions extends ArrayList<TopicSubmission> {
         Collections.sort(this);
     }
 
+    private UnfinishedSubmissions() {
+        super();
+    }
+
     public void write() {
         final Map<String, Integer> registered = new TreeMap<String, Integer>();
         final Map<String, Integer> submitted = new TreeMap<String, Integer>();
+        final Map<String, Map<String, UnfinishedSubmissions>> colloquia =
+            new TreeMap<String, Map<String, UnfinishedSubmissions>>();
         for (final TopicSubmission submission : this) {
-            System.out.print(TopicSubmission.FORMAT.format(submission.due()));
+            switch (submission.type()) {
+            case "Bachelor":
+            case "Bachelor2":
+            case "Master":
+            case "Master2":
+                if (!colloquia.containsKey(submission.location())) {
+                    colloquia.put(submission.location(), new TreeMap<String, UnfinishedSubmissions>());
+                }
+                final Map<String, UnfinishedSubmissions> atLocation = colloquia.get(submission.location());
+                final String otherExaminer = submission.otherExaminer().orElse("");
+                if (!atLocation.containsKey(otherExaminer)) {
+                    atLocation.put(otherExaminer, new UnfinishedSubmissions());
+                }
+                atLocation.get(otherExaminer).add(submission);
+            }
+            System.out.print(Result.FORMAT.format(submission.due()));
             System.out.print(" (");
             if (submission.submitted()) {
                 submitted.merge(submission.type(), 1, Integer::sum);
@@ -42,6 +62,30 @@ public class UnfinishedSubmissions extends ArrayList<TopicSubmission> {
             System.out.print(submission.type());
             System.out.println(")");
         }
+        System.out.println();
+        System.out.println("Colloquia:");
+        if (colloquia.isEmpty()) {
+            System.out.println("none");
+        } else {
+            for (final Map.Entry<String, Map<String, UnfinishedSubmissions>> locationEntry : colloquia.entrySet()) {
+                System.out.print(locationEntry.getKey());
+                System.out.println(":");
+                for (
+                    final Map.Entry<String, UnfinishedSubmissions> reviewerEntry :
+                        locationEntry.getValue().entrySet()
+                ) {
+                    System.out.print("  ");
+                    System.out.print(reviewerEntry.getKey());
+                    System.out.println(":");
+                    for (final TopicSubmission submission : reviewerEntry.getValue()) {
+                        System.out.print("    ");
+                        System.out.println(submission.student());
+                    }
+                    System.out.println("    Total: " + reviewerEntry.getValue().size());
+                }
+            }
+        }
+        System.out.println();
         System.out.println("Statistics:");
         for (final Map.Entry<String, Integer> entry : registered.entrySet()) {
             System.out.println(String.format("Registered %s: %d", entry.getKey(), entry.getValue()));
@@ -60,21 +104,25 @@ public class UnfinishedSubmissions extends ArrayList<TopicSubmission> {
 
     private void processResultFile(final File resultFile) throws IOException {
         Main.LOGGER.log(Level.FINEST, "Checking result file: " + resultFile.toString());
-        if (Files.lines(resultFile.toPath()).findFirst().get().isBlank()) {
-            final List<String> data = Files.lines(resultFile.toPath()).skip(2).toList();
+        final Result result = Result.create(resultFile);
+        if (result.optionalPoints().isEmpty()) {
             try {
                 final Path grandparentPath = resultFile.toPath().getParent().getParent();
+                final boolean secondReviewer =
+                    "Zweitgutachten".equals(grandparentPath.getParent().getFileName().toString());
                 this.add(
                     new TopicSubmission(
-                        grandparentPath.getFileName().toString()
-                        + ("Zweitgutachten".equals(grandparentPath.getParent().getFileName().toString()) ? "2" : ""),
-                        data.get(0),
-                        TopicSubmission.FORMAT.parse(data.get(3)),
-                        UnfinishedSubmissions.containsPDF(resultFile)
+                        grandparentPath.getFileName().toString() + (secondReviewer ? "2" : ""),
+                        result.name(),
+                        result.dueDate(),
+                        UnfinishedSubmissions.containsPDF(resultFile),
+                        result.optionalOtherReviewer(),
+                        !secondReviewer,
+                        result.optionalLocation().orElse("")
                     )
                 );
-            } catch (ParseException | IndexOutOfBoundsException e) {
-                throw new IOException(data.get(0) + ", " + data.get(1), e);
+            } catch (IllegalStateException | IndexOutOfBoundsException e) {
+                throw new IOException(result.name() + ", " + result.title(), e);
             }
         }
         Main.LOGGER.log(Level.FINEST, "Check done!");

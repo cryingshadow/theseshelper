@@ -26,7 +26,7 @@ public class Main {
 
     private static final String PA = "Praxisarbeiten";
 
-    private static final String RESULT = "result.txt";
+    private static final String RESULT = "result.json";
 
     private static final String SECOND = "Zweitgutachten";
 
@@ -133,49 +133,46 @@ public class Main {
     private static int[] countGrades(final List<File> files) throws IOException {
         final int[] result = new int[Main.GRADES.length];
         for (final File file : files) {
-            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-                reader.readLine();
-                final String grade = reader.readLine();
-                if (grade.isBlank()) {
-                    continue;
-                }
-                switch (grade) {
-                case "1,0":
-                    result[0]++;
-                    break;
-                case "1,3":
-                    result[1]++;
-                    break;
-                case "1,7":
-                    result[2]++;
-                    break;
-                case "2,0":
-                    result[3]++;
-                    break;
-                case "2,3":
-                    result[4]++;
-                    break;
-                case "2,7":
-                    result[5]++;
-                    break;
-                case "3,0":
-                    result[6]++;
-                    break;
-                case "3,3":
-                    result[7]++;
-                    break;
-                case "3,7":
-                    result[8]++;
-                    break;
-                case "4,0":
-                    result[9]++;
-                    break;
-                case "5,0":
-                    result[10]++;
-                    break;
-                default:
-                    throw new IOException("Could not parse grade " + grade + "!");
-                }
+            final Result resultFile = Result.create(file);
+            if (resultFile.optionalGrade().isEmpty() || resultFile.grade().isBlank()) {
+                continue;
+            }
+            switch (resultFile.grade()) {
+            case "1,0":
+                result[0]++;
+                break;
+            case "1,3":
+                result[1]++;
+                break;
+            case "1,7":
+                result[2]++;
+                break;
+            case "2,0":
+                result[3]++;
+                break;
+            case "2,3":
+                result[4]++;
+                break;
+            case "2,7":
+                result[5]++;
+                break;
+            case "3,0":
+                result[6]++;
+                break;
+            case "3,3":
+                result[7]++;
+                break;
+            case "3,7":
+                result[8]++;
+                break;
+            case "4,0":
+                result[9]++;
+                break;
+            case "5,0":
+                result[10]++;
+                break;
+            default:
+                throw new IOException("Could not parse grade " + resultFile.grade() + "!");
             }
         }
         return result;
@@ -233,11 +230,11 @@ public class Main {
     private static void createOrUpdateReviewFiles(final File resultFile, final int year) throws IOException {
         final ThesisType thesisType = ThesisType.fromFile(resultFile);
         final Path directory = resultFile.getAbsoluteFile().toPath().getParent();
-        final ResultFile fileContent = ResultFile.create(resultFile);
+        final Result fileContent = Result.create(resultFile);
         if (fileContent.title().isBlank() || (fileContent.grade() != null && !fileContent.grade().isBlank())) {
             return;
         }
-        final String[] nameParts = fileContent.nameParts();
+        final String[] nameParts = fileContent.name().split(" ");
         final StringBuilder namePartsWithoutLast = new StringBuilder();
         for (int i = 0; i < nameParts.length - 1; i++) {
             namePartsWithoutLast.append(nameParts[i]);
@@ -265,7 +262,7 @@ public class Main {
             template.writeTemplate(
                 String.join(" ", nameParts),
                 fileContent.title(),
-                fileContent.otherReviewer(),
+                fileContent.optionalOtherReviewer(),
                 writer
             );
         }
@@ -450,14 +447,9 @@ public class Main {
     }
 
     private static void support(final File root) throws IOException {
-        for (int year = 2022; year <= 2024; year++) {
+        for (int year = 2022; year <= 2026; year++) {
             for (final File resultFile : Main.findAllResultFiles(root, year)) {
-                final ResultFile content = ResultFile.create(resultFile);
-                if (content.otherReviewer().isPresent()) {
-                    try (BufferedWriter writer = new BufferedWriter(new FileWriter(resultFile))) {
-                        content.setOtherReviewer(content.otherReviewer().get().replace(".\\ ", ".\\,")).write(writer);
-                    }
-                }
+                System.out.println(resultFile.getAbsolutePath());
             }
         }
     }

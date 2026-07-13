@@ -9,17 +9,15 @@ import org.testng.*;
 import org.testng.annotations.*;
 
 public class MainTest {
+
     private static interface Action {
         void run() throws IOException;
     }
 
     private static File createResultFile(final File parent, final int points, final String grade) throws IOException {
-        final File result = new File(parent.getAbsolutePath(), "result.txt");
+        final File result = new File(parent.getAbsolutePath(), "result.json");
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(result))) {
-            writer.write(Integer.toString(points));
-            writer.newLine();
-            writer.write(grade);
-            writer.newLine();
+            new Result(points, grade, null, null, null, null, null, null).write(writer);
         }
         return result;
     }

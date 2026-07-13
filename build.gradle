@@ -12,6 +12,7 @@ configurations {
 }
 
 dependencies {
+    extraLibs 'com.google.code.gson:gson:2.12.1'
     testImplementation 'org.testng:testng:7.7.1'
     configurations.implementation.extendsFrom(configurations.extraLibs)
 }
@@ -26,6 +27,7 @@ java {
 }
 
 jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     manifest {
         attributes 'Main-Class': 'thesesstats.Main'
     }

@@ -18,7 +18,7 @@ dependencies {
 }
 
 application {
-    mainClass = 'thesesstats.Main'
+    mainClass = 'theseshelper.Main'
 }
 
 java {
@@ -29,9 +29,9 @@ java {
 jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     manifest {
-        attributes 'Main-Class': 'thesesstats.Main'
+        attributes 'Main-Class': 'theseshelper.Main'
     }
-    archiveBaseName = 'thesesstats'
+    archiveBaseName = 'theseshelper'
     from { configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) } }
 }
 

@@ -1,4 +1,4 @@
-package thesesstats;
+package theseshelper;
 
 public enum Reviewer {
 

@@ -1,4 +1,4 @@
-package thesesstats;
+package theseshelper;
 
 import java.io.*;
 import java.nio.charset.*;
@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.logging.*;
 import java.util.stream.*;
 
-import thesesstats.templates.*;
+import theseshelper.templates.*;
 
 public class Main {
 

@@ -1,4 +1,4 @@
-package thesesstats.templates;
+package theseshelper.templates;
 
 public class ReviewTemplatePractical extends ReviewTemplateBachelor {
 

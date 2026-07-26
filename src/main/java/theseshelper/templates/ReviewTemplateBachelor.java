@@ -1,4 +1,4 @@
-package thesesstats.templates;
+package theseshelper.templates;
 
 import java.io.*;
 

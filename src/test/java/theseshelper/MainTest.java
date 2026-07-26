@@ -4,6 +4,7 @@
 package theseshelper;
 
 import java.io.*;
+import java.lang.reflect.*;
 
 import org.testng.*;
 import org.testng.annotations.*;
@@ -74,12 +75,13 @@ public class MainTest {
     }
 
     @Test
-    public void mainTest() throws IOException, InterruptedException {
+    public void mainTest()
+    throws IOException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         final File locateTmp = File.createTempFile("locate", "tmp");
         final File testDir = new File(locateTmp.getParentFile().getAbsolutePath(), "thesesstats");
         testDir.mkdir();
         final Action tidyUp = MainTest.prepareTestData(testDir);
-        Main.main(new String[] {testDir.getAbsolutePath(), "2023"});
+        Main.main(new String[] {"-d", testDir.getAbsolutePath(), "-y", "2023", "-m", "STATISTICS"});
         final StringBuilder result = new StringBuilder();
         try (
             BufferedReader reader =

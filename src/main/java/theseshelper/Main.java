@@ -1,6 +1,7 @@
 package theseshelper;
 
 import java.io.*;
+import java.lang.reflect.*;
 import java.nio.charset.*;
 import java.nio.file.*;
 import java.time.*;
@@ -8,6 +9,7 @@ import java.util.*;
 import java.util.logging.*;
 import java.util.stream.*;
 
+import clit.*;
 import theseshelper.templates.*;
 
 public class Main {
@@ -43,60 +45,60 @@ public class Main {
         Main.LOGGER.addHandler(handler);
     }
 
-    public static void main(final String[] args) throws IOException, InterruptedException {
+    public static void main(final String[] args)
+    throws IOException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        final CLITamer<Flag> tamer = new CLITamer<Flag>(Flag.class);
+        if (args == null || args.length < 1) {
+            System.out.println(tamer.getParameterDescriptions());
+            return;
+        }
         if (args.length == 1 && "-s".equals(args[0])) {
             Main.support(new File(System.getProperty("user.dir")));
             return;
         }
-        if (args.length == 0) {
-            System.out.println(
-                "Aufruf mit ROOT YEAR [MODE], wobei MODE = PREPARE | POINTS | (REVIEWER TYPE) | UNFINISHED mit "
-                + "REVIEWER = ALL | FIRST | SECOND und TYPE = ALL | ALL_BUT_PA | BA | MA | PA"
-            );
-            return;
-        }
-        final String[] argsWithoutVerbose;
-        if (Arrays.stream(args).anyMatch(arg -> "-v".equals(arg))) {
+        final Parameters<Flag> options = tamer.parse(args);
+        if (options.getAsBooleanOrDefault(Flag.VERBOSITY, false)) {
             Main.LOGGER.setLevel(Level.ALL);
-            argsWithoutVerbose = Arrays.stream(args).filter(arg -> !"-v".equals(arg)).toArray(String[]::new);
         } else {
             Main.LOGGER.setLevel(Level.WARNING);
-            argsWithoutVerbose = args;
         }
-        Main.LOGGER.log(Level.FINE, "Root file: " + argsWithoutVerbose[0]);
-        final File root = new File(argsWithoutVerbose[0]);
-        final int year = argsWithoutVerbose.length > 1 ? Integer.parseInt(argsWithoutVerbose[1]) : 0;
+        final File root = options.containsKey(Flag.DIRECTORY) ? new File(options.get(Flag.DIRECTORY)) : null;
+        Main.LOGGER.log(Level.FINE, "Root file: " + root == null ? "NONE" : root.getAbsolutePath());
+        final int year = Integer.parseInt(options.getOrDefault(Flag.YEAR, "0"));
         Main.LOGGER.log(Level.FINE, "Year: " + year);
         final Years years = new Years(year);
-        if (argsWithoutVerbose.length == 3 && "points".equals(argsWithoutVerbose[2].toLowerCase())) {
-            Main.LOGGER.log(Level.FINE, "Calculating POINTS...");
-            Main.writePoints(Main.countPoints(root, year), root.toPath().resolve("points" + year + ".txt").toFile());
-            return;
-        }
-        if (argsWithoutVerbose.length == 3 && "prepare".equals(argsWithoutVerbose[2].toLowerCase())) {
-            Main.LOGGER.log(Level.FINE, "Preparing reviews...");
-            Main.prepare(root, year);
-            return;
-        }
-        if (argsWithoutVerbose.length == 3 && "unfinished".equals(argsWithoutVerbose[2].toLowerCase())) {
-            Main.LOGGER.log(Level.FINE, "Computing unfinished reviews...");
-            new UnfinishedSubmissions(root, years).write();
-            return;
-        }
-        Main.LOGGER.log(Level.FINE, "Computing statistics...");
-        if (argsWithoutVerbose.length < 3) {
-            for (final Reviewer reviewer : Reviewer.values()) {
-                for (final ThesisType type : ThesisType.values()) {
-                    Main.statistics(root, reviewer, type, years);
+        switch (Mode.valueOf(options.get(Flag.MODE))) {
+        case STATISTICS:
+            Main.LOGGER.log(Level.FINE, "Computing statistics...");
+            if (options.containsKey(Flag.REVIEWER_TYPE)) {
+                final ReviewerType reviewerType = ReviewerType.valueOf(options.get(Flag.REVIEWER_TYPE));
+                final ThesisType thesisType = ThesisType.valueOf(options.getOrDefault(Flag.THESIS_TYPE, "ALL"));
+                Main.statistics(root, reviewerType, thesisType, years);
+            } else {
+                for (final ReviewerType reviewerType : ReviewerType.values()) {
+                    for (final ThesisType thesisType : ThesisType.values()) {
+                        Main.statistics(root, reviewerType, thesisType, years);
+                    }
                 }
             }
             return;
+        case POINTS:
+            Main.LOGGER.log(Level.FINE, "Calculating POINTS...");
+            Main.writePoints(Main.countPoints(root, year), root.toPath().resolve("points" + year + ".txt").toFile());
+            return;
+        case PREPARATION:
+            Main.LOGGER.log(Level.FINE, "Preparing reviews...");
+            Main.prepare(root, year);
+            return;
+        case REVIEW:
+            break;
+        case UNFINISHED:
+            Main.LOGGER.log(Level.FINE, "Computing unfinished reviews...");
+            new UnfinishedSubmissions(root, years).write();
+            return;
+        default:
+            throw new IllegalStateException("Unknown Mode detected!");
         }
-        final Reviewer reviewer =
-            argsWithoutVerbose.length >= 3 ? Reviewer.valueOf(argsWithoutVerbose[2]) : Reviewer.FIRST;
-        final ThesisType type =
-            argsWithoutVerbose.length >= 4 ? ThesisType.valueOf(argsWithoutVerbose[3]) : ThesisType.ALL;
-        Main.statistics(root, reviewer, type, years);
     }
 
     static List<File> findAllResultFiles(final File root, final int year) throws IOException {
@@ -109,7 +111,7 @@ public class Main {
     private static int[] countGrades(
         final File root,
         final int currentYear,
-        final Reviewer reviewer,
+        final ReviewerType reviewer,
         final ThesisType type
     ) throws IOException {
         final List<File> files = new LinkedList<File>();
@@ -331,7 +333,7 @@ public class Main {
         return year > 0 ? String.valueOf(year) : "seit 2022";
     }
 
-    private static String getTitle(final Reviewer reviewer, final ThesisType type) {
+    private static String getTitle(final ReviewerType reviewer, final ThesisType type) {
         return String.format("%s mit %s", type.title, reviewer.title);
     }
 
@@ -428,7 +430,7 @@ public class Main {
 
     private static void statistics(
         final File root,
-        final Reviewer reviewer,
+        final ReviewerType reviewer,
         final ThesisType type,
         final List<Integer> years
     ) throws IOException {
@@ -454,7 +456,7 @@ public class Main {
         }
     }
 
-    private static String toStatisticsFileName(final Reviewer reviewer, final ThesisType type, final int year) {
+    private static String toStatisticsFileName(final ReviewerType reviewer, final ThesisType type, final int year) {
         return String.format(
             Main.STATISTICS_FILE,
             reviewer.name().charAt(0) + reviewer.name().substring(1).toLowerCase(),

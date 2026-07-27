@@ -52,7 +52,10 @@ public record Result(
     }
 
     public Optional<Integer> optionalPoints() {
-        return Optional.ofNullable(this.points());
+        if (this.points() == null || this.points() < 0) {
+            return Optional.empty();
+        }
+        return Optional.of(this.points());
     }
 
     public void write(final BufferedWriter writer) throws IOException {

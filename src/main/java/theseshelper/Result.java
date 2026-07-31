@@ -4,8 +4,6 @@ import java.io.*;
 import java.text.*;
 import java.util.*;
 
-import com.google.gson.*;
-
 public record Result(
     Integer points,
     String grade,
@@ -19,11 +17,9 @@ public record Result(
 
     public static final DateFormat FORMAT = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMAN);
 
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
-
     public static Result create(final File resultFile) throws IOException {
         try (BufferedReader reader = new BufferedReader(new FileReader(resultFile))) {
-            return Result.GSON.fromJson(reader, Result.class);
+            return Main.GSON.fromJson(reader, Result.class);
         }
     }
 
@@ -59,7 +55,7 @@ public record Result(
     }
 
     public void write(final BufferedWriter writer) throws IOException {
-        Result.GSON.toJson(this, this.getClass(), writer);
+        Main.GSON.toJson(this, this.getClass(), writer);
     }
 
     public Result setOtherReviewer(final String otherReviewer) {

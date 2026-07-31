@@ -9,10 +9,14 @@ import java.util.*;
 import java.util.logging.*;
 import java.util.stream.*;
 
+import com.google.gson.*;
+
 import clit.*;
 import theseshelper.templates.*;
 
 public class Main {
+
+    public static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
     static final Logger LOGGER;
 

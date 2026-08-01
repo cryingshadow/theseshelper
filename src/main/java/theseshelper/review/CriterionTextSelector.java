@@ -9,6 +9,8 @@ public class CriterionTextSelector implements Function<BigFraction, String> {
 
     final String defaultText;
 
+    final String name;
+
     final String prefix;
 
     final String suffix;
@@ -16,11 +18,13 @@ public class CriterionTextSelector implements Function<BigFraction, String> {
     final List<CriterionText> texts;
 
     public CriterionTextSelector(
+        final String name,
         final String prefix,
         final List<CriterionText> texts,
         final String defaultText,
         final String suffix
     ) {
+        this.name = name;
         this.prefix = prefix;
         this.suffix = suffix;
         this.defaultText = defaultText;

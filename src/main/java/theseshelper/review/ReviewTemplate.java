@@ -59,7 +59,8 @@ public abstract class ReviewTemplate {
                     ),
                     null,
                     null,
-                    null
+                    null,
+                    true
                 ),
                 new ReviewEvaluationGroup(
                     "Wissenschaftliches Vorgehen",
@@ -86,7 +87,8 @@ public abstract class ReviewTemplate {
                     ),
                     null,
                     null,
-                    null
+                    null,
+                    true
                 ),
                 new ReviewEvaluationGroup(
                     "Praktische Relevanz der Arbeit, Umsetzbarkeit der erarbeiteten Ergebnisse",
@@ -101,7 +103,8 @@ public abstract class ReviewTemplate {
                     ),
                     null,
                     null,
-                    null
+                    null,
+                    true
                 ),
                 new ReviewEvaluationGroup(
                     "Formale Ordnungsmäßigkeit der Arbeit",
@@ -122,7 +125,8 @@ public abstract class ReviewTemplate {
                     ),
                     null,
                     null,
-                    null
+                    null,
+                    true
                 )
             );
         } else {
@@ -151,7 +155,8 @@ public abstract class ReviewTemplate {
                     ),
                     null,
                     null,
-                    null
+                    null,
+                    true
                 ),
                 new ReviewEvaluationGroup(
                     "Wissenschaftliches Vorgehen",
@@ -178,7 +183,8 @@ public abstract class ReviewTemplate {
                     ),
                     null,
                     null,
-                    null
+                    null,
+                    true
                 ),
                 new ReviewEvaluationGroup(
                     "Praktische Relevanz der Arbeit, Umsetzbarkeit der erarbeiteten Ergebnisse",
@@ -193,7 +199,8 @@ public abstract class ReviewTemplate {
                     ),
                     null,
                     null,
-                    null
+                    null,
+                    true
                 ),
                 new ReviewEvaluationGroup(
                     "Formale Ordnungsmäßigkeit der Arbeit",
@@ -214,7 +221,8 @@ public abstract class ReviewTemplate {
                     ),
                     null,
                     null,
-                    null
+                    null,
+                    true
                 )
             );
         }

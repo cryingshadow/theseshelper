@@ -10,7 +10,8 @@ public record ReviewEvaluationGroup(
     List<ReviewEvaluation> evaluations,
     String starttext,
     Integer adjust,
-    String space
+    String space,
+    Boolean diagram
 ) {
 
     public BigFraction evaluate(final BigFraction totalExpected, final BigFraction weightSum) {
@@ -38,7 +39,8 @@ public record ReviewEvaluationGroup(
             this.evaluations() == null ? List.of() : this.evaluations().stream().map(ReviewEvaluation::toRaw).toList(),
             this.starttext(),
             this.adjust(),
-            this.space()
+            this.space(),
+            this.diagram()
         );
     }
 

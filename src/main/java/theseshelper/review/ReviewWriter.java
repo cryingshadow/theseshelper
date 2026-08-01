@@ -1,7 +1,9 @@
 package theseshelper.review;
 
 import java.io.*;
+import java.util.*;
 import java.util.logging.*;
+import java.util.stream.*;
 
 import org.apache.commons.math3.fraction.*;
 
@@ -21,8 +23,11 @@ public class ReviewWriter {
             writer.write("\\usepackage{setspace}\n");
             writer.write("\\usepackage{graphicx}\n");
             writer.write("\\usepackage{xcolor}\n");
+            writer.write("\\usepackage{adjustbox}\n");
             writer.write("\\usepackage{tikz}\n");
-            writer.write("\\usetikzlibrary{arrows,shapes,chains,matrix,positioning,scopes,decorations.pathmorphing,decorations.pathreplacing,shadows,calc,trees}\n\n");
+            writer.write("\\usetikzlibrary{arrows,shapes,chains,matrix,positioning,scopes,decorations.pathmorphing,");
+            writer.write("decorations.pathreplacing,shadows,calc,trees}\n");
+            writer.write("\\usepackage{tkz-kiviat}\n\n");
             writer.write("\\begin{document}\n\n");
             writer.write("\\begin{center}\n");
             writer.write("{\\Huge \\textbf{Gutachten}}\\\\[5ex]\n");
@@ -138,6 +143,38 @@ public class ReviewWriter {
                     if (evaluation.additional() != null && !evaluation.additional().isBlank()) {
                         writer.write(evaluation.additional());
                         writer.write("\n");
+                    }
+                }
+                if (group.diagram() != null && group.diagram()) {
+                    final List<String> criteriaForDiagram =
+                        group
+                        .evaluations()
+                        .stream()
+                        .filter(ev -> !ev.unused())
+                        .map(ev -> {
+                            final CriterionTextSelector criterion = criteria.get(ev.criterion());
+                            return criterion == null ? null : criterion.name;
+                        }).filter(s -> s != null)
+                        .toList();
+                    if (!criteriaForDiagram.isEmpty()) {
+                        writer.write("\n\\begin{adjustbox}{max width=\\linewidth,center}\n");
+                        writer.write("\\begin{tikzpicture}\n");
+                        writer.write("\\tkzKiviatDiagram{");
+                        writer.write(criteriaForDiagram.stream().collect(Collectors.joining(",")));
+                        writer.write("}\n");
+                        writer.write("\\tkzKiviatLine[thick,color=blue,mark=none,fill=blue!20,opacity=.5](");
+                        writer.write(
+                            group
+                            .evaluations()
+                            .stream()
+                            .filter(ev -> !ev.unused())
+                            .map(ev -> criteria.get(ev.criterion()) == null ? null : ev.evaluationForDiagram())
+                            .filter(s -> s != null)
+                            .collect(Collectors.joining(","))
+                        );
+                        writer.write(")\n");
+                        writer.write("\\end{tikzpicture}\n");
+                        writer.write("\\end{adjustbox}\n\n");
                     }
                 }
                 writer.write("\\begin{flushright}{Bewertung: ");

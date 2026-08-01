@@ -8,7 +8,8 @@ public record ReviewEvaluationGroupRaw(
     List<ReviewEvaluationRaw> evaluations,
     String starttext,
     Integer adjust,
-    String space
+    String space,
+    Boolean diagram
 ) {
 
     public ReviewEvaluationGroup toEvaluationGroup() {
@@ -20,7 +21,8 @@ public record ReviewEvaluationGroupRaw(
                     this.evaluations().stream().map(ReviewEvaluationRaw::toEvaluation).toList(),
             this.starttext(),
             this.adjust(),
-            this.space()
+            this.space(),
+            this.diagram()
         );
     }
 

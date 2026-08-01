@@ -20,6 +20,7 @@ public class CriteriaRaw extends TreeMap<String, CriterionTextSelectorRaw> {
             result.put(
                 entry.getKey(),
                 new CriterionTextSelector(
+                    entry.getValue().name(),
                     entry.getValue().prefix(),
                     entry.getValue().texts().stream().map(CriterionTextRaw::toCriterionText).toList(),
                     entry.getValue().defaulttext(),

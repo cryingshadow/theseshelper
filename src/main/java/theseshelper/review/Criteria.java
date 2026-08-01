@@ -29,6 +29,7 @@ public class Criteria extends LinkedHashMap<String, CriterionTextSelector> {
             result.put(
                 entry.getKey(),
                 new CriterionTextSelectorRaw(
+                    entry.getValue().name,
                     entry.getValue().prefix,
                     entry.getValue().texts.stream().map(CriterionText::toRaw).toList(),
                     entry.getValue().defaultText,

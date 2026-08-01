@@ -1,5 +1,7 @@
 package theseshelper.review;
 
+import java.util.*;
+
 import org.apache.commons.math3.fraction.*;
 
 public record ReviewEvaluation(
@@ -30,6 +32,22 @@ public record ReviewEvaluation(
                 .multiply(total);
         default:
             return this.weight().divide(weightSum).multiply(this.evaluation()).multiply(total);
+        }
+    }
+
+    public String evaluationForDiagram() {
+        switch (this.evaluationMode()) {
+        case SPELLING:
+            if (this.evaluation().compareTo(new BigFraction(10)) >= 0) {
+                return "0";
+            }
+            return String.format(
+                Locale.US,
+                "%.2f",
+                new BigFraction(10 - this.evaluation().intValue(), 10).multiply(10).doubleValue()
+            );
+        default:
+            return String.format(Locale.US, "%.2f", this.evaluation().multiply(10).doubleValue());
         }
     }
 

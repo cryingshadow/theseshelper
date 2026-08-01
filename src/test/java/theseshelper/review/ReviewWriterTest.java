@@ -50,12 +50,14 @@ public class ReviewWriterTest {
             Assert.assertEquals(reader.readLine(), "\\usepackage{setspace}");
             Assert.assertEquals(reader.readLine(), "\\usepackage{graphicx}");
             Assert.assertEquals(reader.readLine(), "\\usepackage{xcolor}");
+            Assert.assertEquals(reader.readLine(), "\\usepackage{adjustbox}");
             Assert.assertEquals(reader.readLine(), "\\usepackage{tikz}");
             Assert.assertEquals(
                 reader.readLine(),
                 "\\usetikzlibrary{arrows,shapes,chains,matrix,positioning,scopes,decorations.pathmorphing,"
                 + "decorations.pathreplacing,shadows,calc,trees}"
             );
+            Assert.assertEquals(reader.readLine(), "\\usepackage{tkz-kiviat}");
             Assert.assertEquals(reader.readLine(), "");
             Assert.assertEquals(reader.readLine(), "\\begin{document}");
             Assert.assertEquals(reader.readLine(), "");

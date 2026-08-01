@@ -1,10 +1,13 @@
 package theseshelper.review;
 
+import java.io.*;
 import java.util.*;
 
 import theseshelper.*;
 
 public record ReviewRaw(
+    Boolean empty,
+    String version,
     ThesisType type,
     String title,
     String student,
@@ -20,7 +23,7 @@ public record ReviewRaw(
     String criteriapath,
     Boolean pagebreaktotal,
     String bonusstart,
-    ReviewEvaluation bonus,
+    ReviewEvaluationRaw bonus,
     String totalstart,
     String alternativetotaltext,
     String additionaltotaltext,
@@ -29,6 +32,8 @@ public record ReviewRaw(
 
     public Review toReview() {
         return new Review(
+            this.empty(),
+            this.version(),
             this.type(),
             this.title(),
             this.student(),
@@ -46,12 +51,16 @@ public record ReviewRaw(
             this.criteriapath(),
             this.pagebreaktotal(),
             this.bonusstart(),
-            this.bonus(),
+            this.bonus() == null ? null : this.bonus().toEvaluation(),
             this.totalstart(),
             this.alternativetotaltext(),
             this.additionaltotaltext(),
             Review.parseRationalNumber(this.totalexpected())
         );
+    }
+
+    public void write(final BufferedWriter writer) throws IOException {
+        Main.GSON.toJson(this, this.getClass(), writer);
     }
 
 }

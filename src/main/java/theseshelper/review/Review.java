@@ -1,5 +1,6 @@
 package theseshelper.review;
 
+import java.io.*;
 import java.util.*;
 
 import org.apache.commons.math3.fraction.*;
@@ -7,6 +8,8 @@ import org.apache.commons.math3.fraction.*;
 import theseshelper.*;
 
 public record Review(
+    Boolean empty,
+    String version,
     ThesisType type,
     String title,
     String student,
@@ -28,6 +31,12 @@ public record Review(
     String additionalTotalText,
     BigFraction totalExpected
 ) {
+
+    public static Review parse(final File file) throws IOException {
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            return Main.GSON.fromJson(reader, ReviewRaw.class).toReview();
+        }
+    }
 
     public static BigFraction parseRationalNumber(final String number) {
         if (number == null || number.isBlank()) {
@@ -53,14 +62,6 @@ public record Review(
                 new BigFraction(Integer.parseInt(parts[0].strip()), Integer.parseInt(parts[1].strip()));
     }
 
-    public BigFraction weightSum() {
-        return
-            this.evaluationGroups()
-            .stream()
-            .map(ReviewEvaluationGroup::weight)
-            .reduce(BigFraction.ZERO, (x, y) -> x.add(y));
-    }
-
     public BigFraction evaluate() {
         return
             this.evaluationGroups()
@@ -71,6 +72,73 @@ public record Review(
 
     public boolean hasUnusedCriterion() {
         return this.evaluationGroups().stream().anyMatch(ReviewEvaluationGroup::hasUnusedCriterion);
+    }
+
+    public boolean isOlderVersion(final String version) {
+        final String type = version.substring(0, 2);
+        final String currentVersion = this.version();
+        final String currentType = currentVersion.substring(0, 2);
+        if (!type.equals(currentType)) {
+            return false;
+        }
+        final String[] versionNumber = version.substring(3).split("\\.");
+        final String[] currentVersionNumber = currentVersion.substring(3).split("\\.");
+        int i = 0;
+        while (i < versionNumber.length && i < currentVersionNumber.length) {
+            final int compare =
+                Integer.compare(Integer.parseInt(versionNumber[i]), Integer.parseInt(currentVersionNumber[i]));
+            if (compare < 0) {
+                return true;
+            } else if (compare > 0) {
+                return false;
+            }
+            i++;
+        }
+        if (versionNumber.length < currentVersionNumber.length) {
+            while (i < currentVersionNumber.length) {
+                if (Integer.parseInt(currentVersionNumber[i]) > 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public ReviewRaw toRaw() {
+        return new ReviewRaw(
+            this.empty(),
+            this.version(),
+            this.type(),
+            this.title(),
+            this.student(),
+            this.date(),
+            this.place(),
+            this.reviewer(),
+            this.signature(),
+            this.restricted(),
+            this.twoReviewers(),
+            this.otherReviewer(),
+            this.contributions(),
+            this.evaluationGroups() == null ?
+                List.of() :
+                    this.evaluationGroups().stream().map(ReviewEvaluationGroup::toRaw).toList(),
+            this.criteriaPath(),
+            this.pagebreakTotal(),
+            this.bonusStart(),
+            this.bonus() == null ? null : this.bonus().toRaw(),
+            this.totalStart(),
+            this.alternativeTotalText(),
+            this.additionalTotalText(),
+            this.totalExpected() == null ? "" : this.totalExpected().toString()
+        );
+    }
+
+    public BigFraction weightSum() {
+        return
+            this.evaluationGroups()
+            .stream()
+            .map(ReviewEvaluationGroup::weight)
+            .reduce(BigFraction.ZERO, (x, y) -> x.add(y));
     }
 
 }

@@ -9,7 +9,7 @@ import theseshelper.*;
 public class ReviewWriter {
 
     public static File write(final File reviewFile) throws IOException {
-        final Review review = ReviewWriter.parse(reviewFile);
+        final Review review = Review.parse(reviewFile);
         final Criteria criteria = ReviewWriter.parseCriteria(reviewFile, review);
         final File result = ReviewWriter.toOutputFile(reviewFile);
         try (final BufferedWriter writer = new BufferedWriter(new FileWriter(result))) {
@@ -148,12 +148,6 @@ public class ReviewWriter {
             writer.write("\\end{document}\n");
         }
         return result;
-    }
-
-    private static Review parse(final File file) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            return Main.GSON.fromJson(reader, ReviewRaw.class).toReview();
-        }
     }
 
     private static Criteria parseCriteria(final File reviewFile, final Review review) throws IOException {

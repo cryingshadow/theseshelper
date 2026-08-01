@@ -27,6 +27,17 @@ public record ReviewEvaluation(
         return this.mode() == null ? EvaluationMode.NORMAL : this.mode();
     }
 
+    public ReviewEvaluationRaw toRaw() {
+        return new ReviewEvaluationRaw(
+            this.criterion(),
+            this.evaluation() == null ? "" : this.evaluation().toString(),
+            this.weight() == null ? "" : this.weight().toString(),
+            this.alternative(),
+            this.additional(),
+            this.mode()
+        );
+    }
+
     public boolean unused() {
         return this.evaluation() == null;
     }

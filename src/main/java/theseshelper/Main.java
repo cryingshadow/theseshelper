@@ -12,6 +12,7 @@ import java.util.stream.*;
 import com.google.gson.*;
 
 import clit.*;
+import theseshelper.review.*;
 import theseshelper.templates.*;
 
 public class Main {
@@ -253,10 +254,11 @@ public class Main {
                 namePartsWithoutLast.toString(),
                 thesisType.name()
             );
-        final File reviewFile = directory.resolve(String.format("%s.tex", prefix)).toFile();
-        final ReviewTemplate template = Main.selectReviewTemplate(thesisType);
+        final File reviewFile = directory.resolve(String.format("%s.json", prefix)).toFile();
+        final Review template = ReviewTemplate.selectReviewTemplate(thesisType, fileContent);
         if (reviewFile.exists()) {
-            if (Main.isEmptyAndOlderVersion(reviewFile, template)) {
+            final Review review = Review.parse(reviewFile);
+            if (Main.isEmptyAndOlderVersion(review, template)) {
                 Main.LOGGER.log(Level.FINE, "Updating templates for result file: " + resultFile.toString());
             } else {
                 return;
@@ -265,12 +267,7 @@ public class Main {
             Main.LOGGER.log(Level.FINE, "Creating templates for result file: " + resultFile.toString());
         }
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(reviewFile, Main.UTF8))) {
-            template.writeTemplate(
-                String.join(" ", nameParts),
-                fileContent.title(),
-                fileContent.optionalOtherReviewer(),
-                writer
-            );
+            template.toRaw().write(writer);
         }
         try (
             BufferedWriter writer =
@@ -341,9 +338,8 @@ public class Main {
         return String.format("%s mit %s", type.title, reviewer.title);
     }
 
-    private static boolean isEmptyAndOlderVersion(final File reviewFile, final ReviewTemplate template) throws IOException {
-        final List<String> firstTwoLines = Files.lines(reviewFile.toPath()).limit(2).toList();
-        return "%empty".equals(firstTwoLines.get(1)) && template.isOlderVersion(firstTwoLines.get(0).substring(10));
+    private static boolean isEmptyAndOlderVersion(final Review review, final Review template) throws IOException {
+        return review.empty() != null && review.empty() && template.isOlderVersion(review.version());
     }
 
     private static boolean isLong(final File result) {
@@ -367,19 +363,6 @@ public class Main {
             }
             Main.createOrUpdateReviewFiles(resultFile, year);
             Main.LOGGER.log(Level.FINE, "Preparation done!");
-        }
-    }
-
-    private static ReviewTemplate selectReviewTemplate(final ThesisType thesisType) {
-        switch (thesisType) {
-        case MA:
-            return new ReviewTemplateMaster();
-        case BA:
-            return new ReviewTemplateBachelor();
-        case PA:
-            return new ReviewTemplatePractical();
-        default:
-            return new ReviewTemplateEssay();
         }
     }
 

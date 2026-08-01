@@ -24,12 +24,23 @@ public record ReviewEvaluationGroup(
             .reduce(BigFraction.ZERO, (x, y) -> x.add(y));
     }
 
-    public BigFraction total(final BigFraction totalExpected, final BigFraction weightSum) {
-        return this.weight().divide(weightSum).multiply(totalExpected);
-    }
-
     public boolean hasUnusedCriterion() {
         return this.evaluations().stream().anyMatch(ReviewEvaluation::unused);
+    }
+
+    public ReviewEvaluationGroupRaw toRaw() {
+        return new ReviewEvaluationGroupRaw(
+            this.title(),
+            this.weight() == null ? "" : this.weight().toString(),
+            this.evaluations() == null ? List.of() : this.evaluations().stream().map(ReviewEvaluation::toRaw).toList(),
+            this.starttext(),
+            this.adjust(),
+            this.space()
+        );
+    }
+
+    public BigFraction total(final BigFraction totalExpected, final BigFraction weightSum) {
+        return this.weight().divide(weightSum).multiply(totalExpected);
     }
 
 }

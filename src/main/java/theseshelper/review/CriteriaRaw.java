@@ -2,7 +2,7 @@ package theseshelper.review;
 
 import java.util.*;
 
-public class CriteriaRaw extends LinkedHashMap<String, CriterionTextSelectorRaw> {
+public class CriteriaRaw extends TreeMap<String, CriterionTextSelectorRaw> {
 
     private static final long serialVersionUID = 1L;
 
@@ -20,8 +20,10 @@ public class CriteriaRaw extends LinkedHashMap<String, CriterionTextSelectorRaw>
             result.put(
                 entry.getKey(),
                 new CriterionTextSelector(
+                    entry.getValue().prefix(),
                     entry.getValue().texts().stream().map(CriterionTextRaw::toCriterionText).toList(),
-                    entry.getValue().defaulttext()
+                    entry.getValue().defaulttext(),
+                    entry.getValue().suffix()
                 )
             );
         }

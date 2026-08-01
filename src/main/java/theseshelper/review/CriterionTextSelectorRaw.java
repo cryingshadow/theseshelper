@@ -2,6 +2,6 @@ package theseshelper.review;
 
 import java.util.*;
 
-public record CriterionTextSelectorRaw(List<CriterionTextRaw> texts, String defaulttext) {
+public record CriterionTextSelectorRaw(String prefix, List<CriterionTextRaw> texts, String defaulttext, String suffix) {
 
 }

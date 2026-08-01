@@ -1,4 +1,4 @@
-package theseshelper.templates;
+package theseshelper.review;
 
 import java.io.*;
 import java.util.*;
@@ -6,7 +6,6 @@ import java.util.*;
 import org.apache.commons.math3.fraction.*;
 
 import theseshelper.*;
-import theseshelper.review.*;
 
 public abstract class ReviewTemplate {
 
@@ -24,6 +23,7 @@ public abstract class ReviewTemplate {
             false,
             false,
             resultFile.optionalOtherReviewer().get(),
+            "Die Arbeit verfolgt",
             List.of("Beitrag"),
             ReviewTemplate.selectEvaluationGroups(thesisType),
             "../../../../../templates/review/criteria.json",
@@ -44,7 +44,6 @@ public abstract class ReviewTemplate {
                     "Aufbau der Arbeit, Strukturierung der Bearbeitung",
                     new BigFraction(15, 100),
                     List.of(
-                        new ReviewEvaluation("appearance", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("tocquality", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("lists", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("goal", null, BigFraction.TWO, null, null, null),
@@ -53,8 +52,8 @@ public abstract class ReviewTemplate {
                         new ReviewEvaluation("structureoverview", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("structurequality", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("references", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("conceptsintroduced", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("basicsused", null, BigFraction.ONE, null, null, null),
+                        new ReviewEvaluation("basicscontributionsfit", null, BigFraction.ONE, null, null, null),
+                        new ReviewEvaluation("illustration", null, new BigFraction(4), null, null, null),
                         new ReviewEvaluation("future", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("conclusion", null, BigFraction.ONE, null, null, null)
                     ),
@@ -74,6 +73,7 @@ public abstract class ReviewTemplate {
                         new ReviewEvaluation("relatedcontent", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("relateddifference", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("relatednew", null, BigFraction.ONE, null, null, null),
+                        new ReviewEvaluation("basicscorrect", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("methodintro", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("methodreason", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("methodcover", null, new BigFraction(3), null, null, null),
@@ -81,6 +81,7 @@ public abstract class ReviewTemplate {
                         new ReviewEvaluation("objectivity", null, BigFraction.TWO, null, null, null),
                         new ReviewEvaluation("reliability", null, BigFraction.TWO, null, null, null),
                         new ReviewEvaluation("validity", null, new BigFraction(4), null, null, null),
+                        new ReviewEvaluation("limitations", null, BigFraction.TWO, null, null, null),
                         new ReviewEvaluation("comprehensibility", null, new BigFraction(4), null, null, null)
                     ),
                     null,
@@ -91,11 +92,12 @@ public abstract class ReviewTemplate {
                     "Praktische Relevanz der Arbeit, Umsetzbarkeit der erarbeiteten Ergebnisse",
                     new BigFraction(30, 100),
                     List.of(
+                        new ReviewEvaluation("effort", null, BigFraction.TWO, null, null, null),
                         new ReviewEvaluation("innovativeness", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("relevance", null, BigFraction.ONE, null, null, null),
+                        new ReviewEvaluation("relevance", null, BigFraction.TWO, null, null, null),
                         new ReviewEvaluation("level", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("applicability", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("value", null, BigFraction.ONE, null, null, null)
+                        new ReviewEvaluation("applicability", null, BigFraction.TWO, null, null, null),
+                        new ReviewEvaluation("value", null, BigFraction.TWO, null, null, null)
                     ),
                     null,
                     null,
@@ -105,18 +107,18 @@ public abstract class ReviewTemplate {
                     "Formale Ordnungsmäßigkeit der Arbeit",
                     new BigFraction(15, 100),
                     List.of(
+                        new ReviewEvaluation("appearance", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("distances", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("spelling", null, new BigFraction(3), null, null, EvaluationMode.SPELLING),
-                        new ReviewEvaluation("grammar", null, BigFraction.ONE, null, null, null),
+                        new ReviewEvaluation("spelling", null, BigFraction.TWO, null, null, EvaluationMode.SPELLING),
+                        new ReviewEvaluation("grammar", null, BigFraction.TWO, null, null, null),
                         new ReviewEvaluation("punctuation", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("language", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("illustration", null, new BigFraction(4), null, null, null),
-                        new ReviewEvaluation("figuresquality", null, BigFraction.ONE, null, null, null),
+                        new ReviewEvaluation("language", null, BigFraction.TWO, null, null, null),
+                        new ReviewEvaluation("figuresquality", null, BigFraction.TWO, null, null, null),
                         new ReviewEvaluation("quotingstyle", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("quotinglookup", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("literaturestyle", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("literatureprops", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("diligence", null, new BigFraction(3), null, null, EvaluationMode.EXTRA)
+                        new ReviewEvaluation("literatureprops", null, BigFraction.TWO, null, null, null),
+                        new ReviewEvaluation("diligence", null, BigFraction.ONE, null, null, null)
                     ),
                     null,
                     null,
@@ -129,7 +131,6 @@ public abstract class ReviewTemplate {
                     "Aufbau der Arbeit, Strukturierung der Bearbeitung",
                     new BigFraction(20, 100),
                     List.of(
-                        new ReviewEvaluation("appearance", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("toccontributions", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("tocmethods", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("titlematch", null, BigFraction.ONE, null, null, null),
@@ -142,8 +143,8 @@ public abstract class ReviewTemplate {
                         new ReviewEvaluation("structurebridge", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("structurefast", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("references", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("conceptsintroduced", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("basicsused", null, BigFraction.ONE, null, null, null),
+                        new ReviewEvaluation("basicscontributionsfit", null, BigFraction.ONE, null, null, null),
+                        new ReviewEvaluation("illustration", null, new BigFraction(4), null, null, null),
                         new ReviewEvaluation("future", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("conclusioncontribution", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("conclusiongoal", null, BigFraction.ONE, null, null, null)
@@ -164,6 +165,7 @@ public abstract class ReviewTemplate {
                         new ReviewEvaluation("relatedcontent", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("relateddifference", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("relatednew", null, BigFraction.ONE, null, null, null),
+                        new ReviewEvaluation("basicscorrect", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("methodintro", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("methodreason", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("methodcover", null, BigFraction.TWO, null, null, null),
@@ -171,6 +173,7 @@ public abstract class ReviewTemplate {
                         new ReviewEvaluation("objectivity", null, BigFraction.TWO, null, null, null),
                         new ReviewEvaluation("reliability", null, BigFraction.TWO, null, null, null),
                         new ReviewEvaluation("validity", null, BigFraction.TWO, null, null, null),
+                        new ReviewEvaluation("limitations", null, BigFraction.TWO, null, null, null),
                         new ReviewEvaluation("comprehensibility", null, new BigFraction(3), null, null, null)
                     ),
                     null,
@@ -181,11 +184,12 @@ public abstract class ReviewTemplate {
                     "Praktische Relevanz der Arbeit, Umsetzbarkeit der erarbeiteten Ergebnisse",
                     new BigFraction(30, 100),
                     List.of(
+                        new ReviewEvaluation("effort", null, BigFraction.TWO, null, null, null),
                         new ReviewEvaluation("innovativeness", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("relevance", null, BigFraction.ONE, null, null, null),
+                        new ReviewEvaluation("relevance", null, BigFraction.TWO, null, null, null),
                         new ReviewEvaluation("level", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("applicability", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("value", null, BigFraction.ONE, null, null, null)
+                        new ReviewEvaluation("applicability", null, BigFraction.TWO, null, null, null),
+                        new ReviewEvaluation("value", null, BigFraction.TWO, null, null, null)
                     ),
                     null,
                     null,
@@ -195,18 +199,18 @@ public abstract class ReviewTemplate {
                     "Formale Ordnungsmäßigkeit der Arbeit",
                     new BigFraction(20, 100),
                     List.of(
+                        new ReviewEvaluation("appearance", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("distances", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("spelling", null, new BigFraction(3), null, null, EvaluationMode.SPELLING),
+                        new ReviewEvaluation("spelling", null, BigFraction.TWO, null, null, EvaluationMode.SPELLING),
                         new ReviewEvaluation("grammar", null, BigFraction.TWO, null, null, null),
                         new ReviewEvaluation("punctuation", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("language", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("illustration", null, new BigFraction(4), null, null, null),
                         new ReviewEvaluation("figuresquality", null, BigFraction.TWO, null, null, null),
                         new ReviewEvaluation("quotingstyle", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("quotinglookup", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("literaturestyle", null, BigFraction.ONE, null, null, null),
                         new ReviewEvaluation("literatureprops", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("diligence", null, new BigFraction(3), null, null, EvaluationMode.EXTRA)
+                        new ReviewEvaluation("diligence", null, BigFraction.ONE, null, null, null)
                     ),
                     null,
                     null,
@@ -220,7 +224,7 @@ public abstract class ReviewTemplate {
         switch (thesisType) {
         case BA:
         case PA:
-            return "BA 3.1";
+            return "BA 3.2";
         case MA:
             return "MA 3.2";
         default:

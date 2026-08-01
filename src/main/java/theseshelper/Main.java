@@ -13,13 +13,12 @@ import com.google.gson.*;
 
 import clit.*;
 import theseshelper.review.*;
-import theseshelper.templates.*;
 
 public class Main {
 
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
-    static final Logger LOGGER;
+    public static final Logger LOGGER;
 
     private static final String BACHELOR = "Bachelor";
 
@@ -68,7 +67,7 @@ public class Main {
             Main.LOGGER.setLevel(Level.WARNING);
         }
         final File root = options.containsKey(Flag.DIRECTORY) ? new File(options.get(Flag.DIRECTORY)) : null;
-        Main.LOGGER.log(Level.FINE, "Root file: " + root == null ? "NONE" : root.getAbsolutePath());
+        Main.LOGGER.log(Level.FINE, "Root file: " + (root == null ? "NONE" : root.getAbsolutePath()));
         final int year = Integer.parseInt(options.getOrDefault(Flag.YEAR, "0"));
         Main.LOGGER.log(Level.FINE, "Year: " + year);
         final Years years = new Years(year);
@@ -96,10 +95,20 @@ public class Main {
             Main.prepare(root, year);
             return;
         case REVIEW:
-            break;
+            Main.LOGGER.log(Level.FINE, "Creating review tex file...");
+            ReviewWriter.write(new File(options.get(Flag.INPUT)));
+            return;
         case UNFINISHED:
             Main.LOGGER.log(Level.FINE, "Computing unfinished reviews...");
             new UnfinishedSubmissions(root, years).write();
+            return;
+        case CRITERIA:
+            Main.LOGGER.log(Level.FINE, "Pretty printing criteria file...");
+            final File criteriaFile = new File(options.get(Flag.INPUT));
+            final CriteriaRaw criteria = Criteria.parseCriteria(criteriaFile).toRaw();
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(criteriaFile, Main.UTF8))) {
+                Main.GSON.toJson(criteria, criteria.getClass(), writer);
+            }
             return;
         default:
             throw new IllegalStateException("Unknown Mode detected!");

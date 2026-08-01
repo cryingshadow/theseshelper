@@ -4,11 +4,13 @@ import java.util.*;
 
 public enum Mode {
 
+    CRITERIA("Pretty print criteria.", Set.of(Flag.INPUT)),
+
     POINTS("Compute points for year.", Set.of(Flag.DIRECTORY, Flag.YEAR)),
 
     PREPARATION("Prepare theses for year.", Set.of(Flag.DIRECTORY, Flag.YEAR)),
 
-    REVIEW("Create review.", Set.of(Flag.INPUT, Flag.OUTPUT)),
+    REVIEW("Create review.", Set.of(Flag.INPUT)),
 
     STATISTICS(
         "Compile statistics for year(s).",

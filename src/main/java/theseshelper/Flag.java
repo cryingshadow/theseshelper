@@ -8,7 +8,7 @@ public enum Flag implements Parameter {
 
     INPUT("i", "input", "File for input."),
 
-    MODE("m", "mode", "Execution mode (STATISTICS, CLASS, LIST, QUIZ, REVIEWER, TALK)."),
+    MODE("m", "mode", "Execution mode (STATISTICS, CLASS, LIST, QUIZ, REVIEWER, CRITERIA, TALK)."),
 
     OUTPUT("o", "output", "File for output."),
 

@@ -23,11 +23,12 @@ public class ReviewWriterTest {
             writer.write("\"restricted\": true,");
             writer.write("\"tworeviewers\": false,");
             writer.write("\"otherreviewer\": \"\\\\prof{Willi Wichtig}\",");
+            writer.write("\"goal\": \"Die Arbeit verfolgt die Forschungsfrage, ob Pinguine fliegen können.\",");
             writer.write("\"contributions\": [\"Experiment\", \"Interview\"],");
             writer.write("\"evaluationgroups\": [],");
             writer.write("\"criteriapath\": \"criteria.json\",");
             writer.write("\"bonusstart\": \"War toll, daher Bonus.\",");
-            writer.write("\"bonus\": {},");
+            writer.write("\"bonus\": \"1\",");
             writer.write("\"totalstart\": \"Nu is gut.\",");
             writer.write("\"additionaltotaltext\": \"Schlusswort.\",");
             writer.write("\"totalexpected\": \"100\"");
@@ -43,7 +44,18 @@ public class ReviewWriterTest {
         try (BufferedReader reader = new BufferedReader(new FileReader(result))) {
             Assert.assertEquals(reader.readLine(), "\\documentclass{article}");
             Assert.assertEquals(reader.readLine(), "");
+            Assert.assertEquals(reader.readLine(), "\\usepackage{fhdwutil}");
             Assert.assertEquals(reader.readLine(), "\\usepackage{fhdwevaluation}");
+            Assert.assertEquals(reader.readLine(), "\\usepackage[a4paper,margin=2.5cm]{geometry}");
+            Assert.assertEquals(reader.readLine(), "\\usepackage{setspace}");
+            Assert.assertEquals(reader.readLine(), "\\usepackage{graphicx}");
+            Assert.assertEquals(reader.readLine(), "\\usepackage{xcolor}");
+            Assert.assertEquals(reader.readLine(), "\\usepackage{tikz}");
+            Assert.assertEquals(
+                reader.readLine(),
+                "\\usetikzlibrary{arrows,shapes,chains,matrix,positioning,scopes,decorations.pathmorphing,"
+                + "decorations.pathreplacing,shadows,calc,trees}"
+            );
             Assert.assertEquals(reader.readLine(), "");
             Assert.assertEquals(reader.readLine(), "\\begin{document}");
             Assert.assertEquals(reader.readLine(), "");
@@ -74,8 +86,21 @@ public class ReviewWriterTest {
             Assert.assertEquals(reader.readLine(), "");
             Assert.assertEquals(reader.readLine(), "\\vspace*{2ex}");
             Assert.assertEquals(reader.readLine(), "");
+            Assert.assertEquals(reader.readLine(), "\\section{Inhalt}");
+            Assert.assertEquals(
+                reader.readLine(),
+                "Die Arbeit verfolgt die Forschungsfrage, ob Pinguine fliegen können.\\\\"
+            );
+            Assert.assertEquals(reader.readLine(), "Dazu werden die folgenden Beiträge erbracht:");
+            Assert.assertEquals(reader.readLine(), "\\begin{itemize}");
+            Assert.assertEquals(reader.readLine(), "\\item Experiment");
+            Assert.assertEquals(reader.readLine(), "\\item Interview");
+            Assert.assertEquals(reader.readLine(), "\\end{itemize}");
+            Assert.assertEquals(reader.readLine(), "");
             Assert.assertEquals(reader.readLine(), "\\section{Gesamtbeurteilung}");
-            Assert.assertEquals(reader.readLine(), "Insgesamt wurden 0 Punkte erreicht und das Gesamturteil lautet:");
+            Assert.assertEquals(reader.readLine(), "War toll, daher Bonus.");
+            Assert.assertEquals(reader.readLine(), "Es wurde 1 Bonuspunkt gewährt.");
+            Assert.assertEquals(reader.readLine(), "Insgesamt wurde 1 Punkt erreicht und das Gesamturteil lautet:");
             Assert.assertEquals(reader.readLine(), "\\begin{center}{\\large\\textbf{5{,}0}}\\end{center}");
             Assert.assertEquals(reader.readLine(), "");
             Assert.assertEquals(reader.readLine(), "\\vspace*{7ex}");

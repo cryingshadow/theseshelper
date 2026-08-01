@@ -7,11 +7,22 @@ import org.apache.commons.math3.fraction.*;
 
 public class CriterionTextSelector implements Function<BigFraction, String> {
 
-    private final String defaultText;
+    final String defaultText;
 
-    private final List<CriterionText> texts;
+    final String prefix;
 
-    public CriterionTextSelector(final List<CriterionText> texts, final String defaultText) {
+    final String suffix;
+
+    final List<CriterionText> texts;
+
+    public CriterionTextSelector(
+        final String prefix,
+        final List<CriterionText> texts,
+        final String defaultText,
+        final String suffix
+    ) {
+        this.prefix = prefix;
+        this.suffix = suffix;
         this.defaultText = defaultText;
         this.texts = new ArrayList<CriterionText>(texts);
         Collections.sort(this.texts);
@@ -19,12 +30,21 @@ public class CriterionTextSelector implements Function<BigFraction, String> {
 
     @Override
     public String apply(final BigFraction evaluation) {
+        final StringBuilder result = new StringBuilder();
+        result.append(this.prefix);
+        boolean found = false;
         for (final CriterionText text : this.texts) {
             if (evaluation.compareTo(text.achieved()) >= 0) {
-                return text.text();
+                result.append(text.text());
+                found = true;
+                break;
             }
         }
-        return this.defaultText;
+        if (!found) {
+            result.append(this.defaultText);
+        }
+        result.append(this.suffix);
+        return result.toString();
     }
 
 }

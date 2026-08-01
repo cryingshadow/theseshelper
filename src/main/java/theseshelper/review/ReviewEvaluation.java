@@ -12,14 +12,24 @@ public record ReviewEvaluation(
 ) {
 
     public BigFraction evaluate(final BigFraction total, final BigFraction weightSum) {
+        if (this.unused()) {
+            return BigFraction.ZERO;
+        }
         switch (this.evaluationMode()) {
         case EXTRA:
-            return this.unused() ? BigFraction.ZERO : this.evaluation();
-        default:
+        case BONUS:
+            return this.evaluation();
+        case SPELLING:
+            if (this.evaluation().compareTo(new BigFraction(10)) >= 0) {
+                return BigFraction.ZERO;
+            }
             return
-                this.unused() ?
-                    BigFraction.ZERO :
-                        this.weight().divide(weightSum).multiply(this.evaluation()).multiply(total);
+                this.weight()
+                .divide(weightSum)
+                .multiply(new BigFraction(10 - this.evaluation().intValue(), 10))
+                .multiply(total);
+        default:
+            return this.weight().divide(weightSum).multiply(this.evaluation()).multiply(total);
         }
     }
 
@@ -40,6 +50,16 @@ public record ReviewEvaluation(
 
     public boolean unused() {
         return this.evaluation() == null;
+    }
+
+    public BigFraction weightForSum() {
+        switch (this.evaluationMode()) {
+        case EXTRA:
+        case BONUS:
+            return BigFraction.ZERO;
+        default:
+            return this.weight();
+        }
     }
 
 }

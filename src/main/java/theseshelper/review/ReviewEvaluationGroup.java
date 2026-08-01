@@ -16,7 +16,10 @@ public record ReviewEvaluationGroup(
     public BigFraction evaluate(final BigFraction totalExpected, final BigFraction weightSum) {
         final BigFraction innerTotal = this.total(totalExpected, weightSum);
         final BigFraction innerWeightSum =
-            this.evaluations().stream().map(ReviewEvaluation::weight).reduce(BigFraction.ZERO, (x, y) -> x.add(y));
+            this.evaluations()
+            .stream()
+            .map(ReviewEvaluation::weightForSum)
+            .reduce(BigFraction.ZERO, (x, y) -> x.add(y));
         return
             this.evaluations()
             .stream()

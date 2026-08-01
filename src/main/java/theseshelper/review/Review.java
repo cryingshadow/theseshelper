@@ -20,12 +20,13 @@ public record Review(
     Boolean restricted,
     Boolean twoReviewers,
     String otherReviewer,
+    String goal,
     List<String> contributions,
     List<ReviewEvaluationGroup> evaluationGroups,
     String criteriaPath,
     Boolean pagebreakTotal,
     String bonusStart,
-    ReviewEvaluation bonus,
+    BigFraction bonus,
     String totalStart,
     String alternativeTotalText,
     String additionalTotalText,
@@ -67,7 +68,8 @@ public record Review(
             this.evaluationGroups()
             .stream()
             .map(g -> g.evaluate(this.totalExpected(), this.weightSum()))
-            .reduce(BigFraction.ZERO, (x, y) -> x.add(y));
+            .reduce(BigFraction.ZERO, (x, y) -> x.add(y))
+            .add(this.bonus() == null ? BigFraction.ZERO : this.bonus());
     }
 
     public boolean hasUnusedCriterion() {
@@ -118,6 +120,7 @@ public record Review(
             this.restricted(),
             this.twoReviewers(),
             this.otherReviewer(),
+            this.goal(),
             this.contributions(),
             this.evaluationGroups() == null ?
                 List.of() :
@@ -125,7 +128,7 @@ public record Review(
             this.criteriaPath(),
             this.pagebreakTotal(),
             this.bonusStart(),
-            this.bonus() == null ? null : this.bonus().toRaw(),
+            this.bonus() == null ? null : this.bonus().toString(),
             this.totalStart(),
             this.alternativeTotalText(),
             this.additionalTotalText(),

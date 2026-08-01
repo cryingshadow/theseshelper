@@ -1,6 +1,7 @@
 package theseshelper.review;
 
 import java.io.*;
+import java.util.logging.*;
 
 import org.apache.commons.math3.fraction.*;
 
@@ -14,7 +15,14 @@ public class ReviewWriter {
         final File result = ReviewWriter.toOutputFile(reviewFile);
         try (final BufferedWriter writer = new BufferedWriter(new FileWriter(result))) {
             writer.write("\\documentclass{article}\n\n");
-            writer.write("\\usepackage{fhdwevaluation}\n\n");
+            writer.write("\\usepackage{fhdwutil}\n");
+            writer.write("\\usepackage{fhdwevaluation}\n");
+            writer.write("\\usepackage[a4paper,margin=2.5cm]{geometry}\n");
+            writer.write("\\usepackage{setspace}\n");
+            writer.write("\\usepackage{graphicx}\n");
+            writer.write("\\usepackage{xcolor}\n");
+            writer.write("\\usepackage{tikz}\n");
+            writer.write("\\usetikzlibrary{arrows,shapes,chains,matrix,positioning,scopes,decorations.pathmorphing,decorations.pathreplacing,shadows,calc,trees}\n\n");
             writer.write("\\begin{document}\n\n");
             writer.write("\\begin{center}\n");
             writer.write("{\\Huge \\textbf{Gutachten}}\\\\[5ex]\n");
@@ -43,6 +51,21 @@ public class ReviewWriter {
                 writer.write("\\end{center}\n\n");
                 writer.write("\\vspace*{2ex}\n\n");
             }
+            writer.write("\\section{Inhalt}\n");
+            writer.write(review.goal());
+            writer.write("\\\\\n");
+            if (review.contributions().isEmpty()) {
+                writer.write("Leider erbringt die Arbeit keine wissenschaftlichen Eigenbeiträge.\n\n");
+            } else {
+                writer.write("Dazu werden die folgenden Beiträge erbracht:\n");
+                writer.write("\\begin{itemize}\n");
+                for (final String contribution : review.contributions()) {
+                    writer.write("\\item ");
+                    writer.write(contribution);
+                    writer.write("\n");
+                }
+                writer.write("\\end{itemize}\n\n");
+            }
             final String spellingErrorText = " durch eine automatische Rechtschreibprüfung gefunden ";
             final BigFraction weightSum = review.weightSum();
             for (final ReviewEvaluationGroup group : review.evaluationGroups()) {
@@ -58,6 +81,13 @@ public class ReviewWriter {
                     writer.write("\n");
                 }
                 for (final ReviewEvaluation evaluation : group.evaluations()) {
+                    if (evaluation.evaluation() == null) {
+                        continue;
+                    }
+                    if (evaluation.alternative() != null && !evaluation.alternative().isBlank()) {
+                        writer.write(evaluation.alternative());
+                        continue;
+                    }
                     switch (evaluation.evaluationMode()) {
                     case SPELLING:
                         writer.write("Die Arbeit enthält ");
@@ -80,9 +110,33 @@ public class ReviewWriter {
                             writer.write("wurden.");
                         }
                         break;
+                    case BONUS:
+                        writer.write("Es wurde");
+                        final String bonusPoints = evaluation.evaluation().toString();
+                        if ("1".equals(bonusPoints)) {
+                            writer.write(" 1 Bonuspunkt");
+                        } else {
+                            writer.write("n ");
+                            writer.write(bonusPoints);
+                            writer.write(" Bonuspunkte");
+                        }
+                        writer.write(" gewährt.\n");
+                        break;
                     default:
                         final CriterionTextSelector selector = criteria.get(evaluation.criterion());
-                        writer.write(selector.apply(evaluation.evaluation()));
+                        if (selector == null) {
+                            Main.LOGGER.log(
+                                Level.WARNING,
+                                String.format("Criterion %s not found!", evaluation.criterion())
+                            );
+                            writer.write(evaluation.criterion());
+                        } else {
+                            writer.write(selector.apply(evaluation.evaluation()));
+                        }
+                        writer.write("\n");
+                    }
+                    if (evaluation.additional() != null && !evaluation.additional().isBlank()) {
+                        writer.write(evaluation.additional());
                         writer.write("\n");
                     }
                 }
@@ -96,6 +150,22 @@ public class ReviewWriter {
                 writer.write("\\pagebreak\n\n");
             }
             writer.write("\\section{Gesamtbeurteilung}\n");
+            if (review.bonusStart() != null && !review.bonusStart().isBlank()) {
+                writer.write(review.bonusStart());
+                writer.write("\n");
+            }
+            if (review.bonus() != null) {
+                writer.write("Es wurde");
+                final String bonusPoints = review.bonus().toString();
+                if ("1".equals(bonusPoints)) {
+                    writer.write(" 1 Bonuspunkt");
+                } else {
+                    writer.write("n ");
+                    writer.write(bonusPoints);
+                    writer.write(" Bonuspunkte");
+                }
+                writer.write(" gewährt.\n");
+            }
             final int achieved = review.evaluate().intValue();
             writer.write("Insgesamt wurde");
             if (achieved == 1) {
@@ -151,11 +221,9 @@ public class ReviewWriter {
     }
 
     private static Criteria parseCriteria(final File reviewFile, final Review review) throws IOException {
-        final File criteriaFile =
-            reviewFile.toPath().toAbsolutePath().getParent().resolve(review.criteriaPath()).toFile();
-        try (BufferedReader reader = new BufferedReader(new FileReader(criteriaFile))) {
-            return Main.GSON.fromJson(reader, CriteriaRaw.class).toCriteria();
-        }
+        return Criteria.parseCriteria(
+            reviewFile.toPath().toAbsolutePath().getParent().resolve(review.criteriaPath()).toFile()
+        );
     }
 
     private static String toGrade(final BigFraction percent) {

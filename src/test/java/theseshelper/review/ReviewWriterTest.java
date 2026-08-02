@@ -105,7 +105,7 @@ public class ReviewWriterTest {
             Assert.assertEquals(reader.readLine(), "Insgesamt wurde 1 Punkt erreicht und das Gesamturteil lautet:");
             Assert.assertEquals(reader.readLine(), "\\begin{center}{\\large\\textbf{5{,}0}}\\end{center}");
             Assert.assertEquals(reader.readLine(), "");
-            Assert.assertEquals(reader.readLine(), "\\vspace*{7ex}");
+            Assert.assertEquals(reader.readLine(), "\\vspace*{5ex}");
             Assert.assertEquals(reader.readLine(), "");
             Assert.assertEquals(reader.readLine(), "\\begin{flushright}");
             Assert.assertEquals(reader.readLine(), "Giambola, den 1.~April~2000");
@@ -128,6 +128,15 @@ public class ReviewWriterTest {
             Assert.assertEquals(reader.readLine(), "\\end{minipage}");
             Assert.assertEquals(reader.readLine(), "");
             Assert.assertEquals(reader.readLine(), "\\end{flushright}");
+            Assert.assertEquals(reader.readLine(), "");
+            Assert.assertEquals(reader.readLine(), "\\vfill");
+            Assert.assertEquals(reader.readLine(), "");
+            Assert.assertEquals(
+                reader.readLine(),
+                "\\noindent Auf den nachfolgenden Seiten wird diese Bewertung näher erläutert."
+            );
+            Assert.assertEquals(reader.readLine(), "");
+            Assert.assertEquals(reader.readLine(), "\\pagebreak");
             Assert.assertEquals(reader.readLine(), "");
             Assert.assertEquals(reader.readLine(), "\\end{document}");
             Assert.assertEquals(reader.readLine(), null);

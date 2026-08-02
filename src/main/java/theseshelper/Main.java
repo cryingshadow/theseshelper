@@ -22,6 +22,8 @@ public class Main {
 
     private static final String BACHELOR = "Bachelor";
 
+    private static final String COMPILE = "compile.sh";
+
     private static final String ERROR = "errors.txt";
 
     private static final String FIRST = "Erstgutachten";
@@ -243,6 +245,18 @@ public class Main {
         return points;
     }
 
+    private static void createCompileFileIfNotExists(final File jsonFile) throws IOException {
+        final File compileFile = jsonFile.toPath().getParent().resolve(Main.COMPILE).toFile();
+        if (!compileFile.exists()) {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(compileFile, Main.UTF8))) {
+                writer.write("#!/bin/bash\n\n");
+                writer.write("java -jar ../../../../theseshelper.jar -m REVIEW -i ");
+                writer.write(jsonFile.getName());
+                writer.write("\n");
+            }
+        }
+    }
+
     private static void createOrUpdateReviewFiles(final File resultFile, final int year) throws IOException {
         final ThesisType thesisType = ThesisType.fromFile(resultFile);
         final Path directory = resultFile.getAbsoluteFile().toPath().getParent();
@@ -264,6 +278,7 @@ public class Main {
                 thesisType.name()
             );
         final File reviewFile = directory.resolve(String.format("%s.json", prefix)).toFile();
+        Main.createCompileFileIfNotExists(reviewFile);
         final Review template = ReviewTemplate.selectReviewTemplate(thesisType, fileContent);
         if (reviewFile.exists()) {
             final Review review = Review.parse(reviewFile);

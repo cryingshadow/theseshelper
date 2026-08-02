@@ -31,7 +31,8 @@ public abstract class ReviewTemplate {
             null,
             null,
             null,
-            new BigFraction(100)
+            new BigFraction(100),
+            null
         );
     }
 

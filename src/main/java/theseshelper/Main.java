@@ -249,11 +249,20 @@ public class Main {
         final File compileFile = jsonFile.toPath().getParent().resolve(Main.COMPILE).toFile();
         if (!compileFile.exists()) {
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(compileFile, Main.UTF8))) {
+                final String name = jsonFile.getName();
+                final String nameWithoutSuffix = name.substring(0, name.length() - 5);
                 writer.write("#!/bin/bash\n\n");
                 writer.write("java -jar ../../../../theseshelper.jar -m REVIEW -i ");
-                writer.write(jsonFile.getName());
+                writer.write(name);
+                writer.write("\n");
+                writer.write("pdflatex ");
+                writer.write(nameWithoutSuffix);
+                writer.write("\n");
+                writer.write("pdflatex ");
+                writer.write(nameWithoutSuffix);
                 writer.write("\n");
             }
+            compileFile.setExecutable(true);
         }
     }
 

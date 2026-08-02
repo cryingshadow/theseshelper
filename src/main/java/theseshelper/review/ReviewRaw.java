@@ -28,7 +28,8 @@ public record ReviewRaw(
     String totalstart,
     String alternativetotaltext,
     String additionaltotaltext,
-    String totalexpected
+    String totalexpected,
+    Boolean corner
 ) {
 
     public Review toReview() {
@@ -57,7 +58,8 @@ public record ReviewRaw(
             this.totalstart(),
             this.alternativetotaltext(),
             this.additionaltotaltext(),
-            Review.parseRationalNumber(this.totalexpected())
+            Review.parseRationalNumber(this.totalexpected()),
+            this.corner()
         );
     }
 

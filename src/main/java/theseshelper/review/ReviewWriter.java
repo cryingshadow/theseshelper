@@ -32,6 +32,26 @@ public abstract class ReviewWriter {
         return result;
     }
 
+    private static boolean isCornerValue(final int percentage) {
+        switch (percentage) {
+        case 47:
+        case 48:
+        case 49:
+        case 58:
+        case 66:
+        case 71:
+        case 76:
+        case 80:
+        case 84:
+        case 88:
+        case 91:
+        case 96:
+            return true;
+        default:
+            return false;
+        }
+    }
+
     private static Criteria parseCriteria(final File reviewFile, final Review review) throws IOException {
         return Criteria.parseCriteria(
             reviewFile.toPath().toAbsolutePath().getParent().resolve(review.criteriaPath()).toFile()
@@ -354,10 +374,17 @@ public abstract class ReviewWriter {
         }
         writer.write(" erreicht und das Gesamturteil lautet:\n");
         writer.write("\\begin{center}{\\large\\textbf{");
-        writer.write(ReviewWriter.toGrade(new BigFraction(achieved).divide(review.totalExpected())));
+        final BigFraction percentage = new BigFraction(achieved).divide(review.totalExpected());
+        writer.write(ReviewWriter.toGrade(percentage));
         writer.write("}}\\end{center}\n\n");
         if (review.hasUnusedCriterion()) {
             writer.write("\\footnote{\\textcolor{red}{Nicht alle Kriterien wurden bewertet!}}\n\n");
+        }
+        if (
+            ReviewWriter.isCornerValue(percentage.multiply(100).intValue())
+            && (review.corner() == null || !review.corner())
+        ) {
+            writer.write("\\footnote{\\textcolor{red}{Ergebnis ist grenzwertig!}}\n\n");
         }
     }
 

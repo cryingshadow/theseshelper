@@ -30,7 +30,8 @@ public record Review(
     String totalStart,
     String alternativeTotalText,
     String additionalTotalText,
-    BigFraction totalExpected
+    BigFraction totalExpected,
+    Boolean corner
 ) {
 
     public static Review parse(final File file) throws IOException {
@@ -132,7 +133,8 @@ public record Review(
             this.totalStart(),
             this.alternativeTotalText(),
             this.additionalTotalText(),
-            this.totalExpected() == null ? "" : this.totalExpected().toString()
+            this.totalExpected() == null ? "" : this.totalExpected().toString(),
+            this.corner()
         );
     }
 

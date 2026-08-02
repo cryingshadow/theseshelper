@@ -25,7 +25,8 @@ public record ReviewEvaluationGroup(
             this.evaluations()
             .stream()
             .map(e -> e.evaluate(innerTotal, innerWeightSum))
-            .reduce(BigFraction.ZERO, (x, y) -> x.add(y));
+            .reduce(BigFraction.ZERO, (x, y) -> x.add(y))
+            .add(this.adjust() == null ? BigFraction.ZERO : new BigFraction(this.adjust()));
     }
 
     public boolean hasUnusedCriterion() {

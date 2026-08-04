@@ -20,6 +20,8 @@ public class Main {
 
     public static final Logger LOGGER;
 
+    public static final Charset UTF8 = Charset.forName("UTF-8");
+
     private static final String BACHELOR = "Bachelor";
 
     private static final String COMPILE = "compile.sh";
@@ -41,8 +43,6 @@ public class Main {
     private static final String STATISTICS = "Statistik";
 
     private static final String STATISTICS_FILE = "statistics%s%s%s.tex";
-
-    private static final Charset UTF8 = Charset.forName("UTF-8");
 
     static {
         LOGGER = LogManager.getLogManager().getLogger("");
@@ -152,10 +152,10 @@ public class Main {
         final int[] result = new int[Main.GRADES.length];
         for (final File file : files) {
             final Result resultFile = Result.create(file);
-            if (resultFile.optionalGrade().isEmpty() || resultFile.grade().isBlank()) {
+            if (resultFile.optionalThesisGrade().isEmpty() || resultFile.thesisgrade().isBlank()) {
                 continue;
             }
-            switch (resultFile.grade()) {
+            switch (resultFile.thesisgrade()) {
             case "1,0":
                 result[0]++;
                 break;
@@ -190,7 +190,7 @@ public class Main {
                 result[10]++;
                 break;
             default:
-                throw new IOException("Could not parse grade " + resultFile.grade() + "!");
+                throw new IOException("Could not parse grade " + resultFile.thesisgrade() + "!");
             }
         }
         return result;
@@ -270,7 +270,10 @@ public class Main {
         final ThesisType thesisType = ThesisType.fromFile(resultFile);
         final Path directory = resultFile.getAbsoluteFile().toPath().getParent();
         final Result fileContent = Result.create(resultFile);
-        if (fileContent.title().isBlank() || (fileContent.grade() != null && !fileContent.grade().isBlank())) {
+        if (
+            fileContent.title().isBlank()
+            || (fileContent.thesisgrade() != null && !fileContent.thesisgrade().isBlank())
+        ) {
             return;
         }
         final String prefix =
@@ -466,7 +469,7 @@ public class Main {
     private static void support(final File root) throws IOException {
         for (int year = 2022; year <= 2026; year++) {
             for (final File resultFile : Main.findAllResultFiles(root, year)) {
-                System.out.println(resultFile.getAbsolutePath());
+                System.out.println(resultFile);
             }
         }
     }

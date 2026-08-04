@@ -6,14 +6,15 @@ import java.util.*;
 
 public record Result(
     Integer points,
-    String grade,
+    String thesisgrade,
     String givennames,
     String familynames,
     String title,
     String otherReviewer,
     String due,
-    String colloquium,
+    String colloquiumdate,
     String location,
+    String colloquiumgrade,
     Boolean longReview
 ) {
 
@@ -25,14 +26,14 @@ public record Result(
         }
     }
 
-    public Optional<Date> colloquiumDate() {
-        if (this.colloquium() == null || this.colloquium().isBlank()) {
+    public Optional<Date> optionalColloquiumDate() {
+        if (this.colloquiumdate() == null || this.colloquiumdate().isBlank()) {
             return Optional.empty();
         }
         try {
-            return Optional.of(Result.FORMAT.parse(this.colloquium()));
+            return Optional.of(Result.FORMAT.parse(this.colloquiumdate()));
         } catch (final ParseException e) {
-            throw new IllegalStateException(String.format("Date parsing failed for \"%s\"!", this.colloquium()), e);
+            throw new IllegalStateException(String.format("Date parsing failed for \"%s\"!", this.colloquiumdate()), e);
         }
     }
 
@@ -44,8 +45,8 @@ public record Result(
         }
     }
 
-    public Optional<String> optionalGrade() {
-        return Optional.ofNullable(this.grade());
+    public Optional<String> optionalThesisGrade() {
+        return Optional.ofNullable(this.thesisgrade());
     }
 
     public Optional<String> optionalLocation() {
@@ -70,20 +71,23 @@ public record Result(
     public Result setOtherReviewer(final String otherReviewer) {
         return new Result(
             this.points(),
-            this.grade(),
+            this.thesisgrade(),
             this.givennames(),
             this.familynames(),
             this.title(),
             otherReviewer,
             this.due(),
-            this.colloquium(),
+            this.colloquiumdate(),
             this.location(),
+            this.colloquiumgrade(),
             this.longReview()
         );
     }
 
-    public void write(final BufferedWriter writer) throws IOException {
-        Main.GSON.toJson(this, this.getClass(), writer);
+    public void write(final File file) throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, Main.UTF8))) {
+            Main.GSON.toJson(this, this.getClass(), writer);
+        }
     }
 
 }

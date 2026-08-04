@@ -121,10 +121,11 @@ public class UnfinishedSubmissions extends ArrayList<TopicSubmission> {
         final Date today,
         final Optional<Date> colloquium
     ) {
-        System.out.println(type);
-        return due != null
+        return
+            due != null
             && !due.isBlank()
-            && (!type.startsWith("Praxisarbeiten") || !grade.isEmpty())
+            && (!type.startsWith("Praxisarbeiten") || grade.isEmpty())
+            && (grade.isEmpty() || !"5,0".equals(grade.get()))
             && (colloquium.isEmpty() || today.after(colloquium.get()));
     }
 
@@ -136,8 +137,8 @@ public class UnfinishedSubmissions extends ArrayList<TopicSubmission> {
             final boolean secondReviewer =
                 "Zweitgutachten".equals(grandparentPath.getParent().getFileName().toString());
             final String type = grandparentPath.getFileName().toString() + (secondReviewer ? "2" : "");
-            final Optional<Date> colloquium = result.colloquiumDate();
-            if (this.isUnfinished(type, result.due(), result.optionalGrade(), today, colloquium)) {
+            final Optional<Date> colloquium = result.optionalColloquiumDate();
+            if (this.isUnfinished(type, result.due(), result.optionalThesisGrade(), today, colloquium)) {
                 this.add(
                     new TopicSubmission(
                         type,

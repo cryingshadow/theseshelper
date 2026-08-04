@@ -10,7 +10,18 @@ public class LexicographicComparator<T> implements Comparator<T> {
 
             @Override
             public int compare(final A o1, final A o2) {
-                return selector.apply(o1).compareTo(selector.apply(o2));
+                final B b1 = selector.apply(o1);
+                final B b2 = selector.apply(o2);
+                if (b1 == null) {
+                    if (b2 == null) {
+                        return 0;
+                    }
+                    return -1;
+                }
+                if (b2 == null) {
+                    return 1;
+                }
+                return b1.compareTo(b2);
             }
 
         };

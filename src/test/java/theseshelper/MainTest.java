@@ -14,9 +14,7 @@ public class MainTest {
 
     private static File createResultFile(final File parent, final int points, final String grade) throws IOException {
         final File result = new File(parent.getAbsolutePath(), "result.json");
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(result))) {
-            new Result(points, grade, null, null, null, null, null, null, null, null).write(writer);
-        }
+        new Result(points, grade, null, null, null, null, null, null, null, null, null).write(result);
         return result;
     }
 

@@ -13,7 +13,7 @@ public abstract class ReviewTemplate {
             ReviewTemplate.toVersion(thesisType),
             thesisType,
             resultFile.title(),
-            resultFile.name(),
+            String.format("%s %s", resultFile.givennames(), resultFile.familynames()),
             "\\today",
             "Essen",
             "\\prof{Thomas Ströder}",

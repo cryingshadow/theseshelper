@@ -7,10 +7,12 @@ import java.util.*;
 public record Result(
     Integer points,
     String grade,
-    String name,
+    String givennames,
+    String familynames,
     String title,
     String otherReviewer,
     String due,
+    String colloquium,
     String location,
     Boolean longReview
 ) {
@@ -23,8 +25,23 @@ public record Result(
         }
     }
 
-    public Optional<String> optionalOtherReviewer() {
-        return Optional.ofNullable(this.otherReviewer());
+    public Optional<Date> colloquiumDate() {
+        if (this.colloquium() == null || this.colloquium().isBlank()) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(Result.FORMAT.parse(this.colloquium()));
+        } catch (final ParseException e) {
+            throw new IllegalStateException(String.format("Date parsing failed for \"%s\"!", this.colloquium()), e);
+        }
+    }
+
+    public Date dueDate() {
+        try {
+            return Result.FORMAT.parse(this.due());
+        } catch (final ParseException e) {
+            throw new IllegalStateException(String.format("Date parsing failed for \"%s\"!", this.due()), e);
+        }
     }
 
     public Optional<String> optionalGrade() {
@@ -39,12 +56,8 @@ public record Result(
         return Optional.ofNullable(this.longReview());
     }
 
-    public Date dueDate() {
-        try {
-            return Result.FORMAT.parse(this.due());
-        } catch (final ParseException e) {
-            throw new IllegalStateException(String.format("Date parsing failed for \"%s\"!", this.due()), e);
-        }
+    public Optional<String> optionalOtherReviewer() {
+        return Optional.ofNullable(this.otherReviewer());
     }
 
     public Optional<Integer> optionalPoints() {
@@ -54,21 +67,23 @@ public record Result(
         return Optional.of(this.points());
     }
 
-    public void write(final BufferedWriter writer) throws IOException {
-        Main.GSON.toJson(this, this.getClass(), writer);
-    }
-
     public Result setOtherReviewer(final String otherReviewer) {
         return new Result(
             this.points(),
             this.grade(),
-            this.name(),
+            this.givennames(),
+            this.familynames(),
             this.title(),
             otherReviewer,
             this.due(),
+            this.colloquium(),
             this.location(),
             this.longReview()
         );
+    }
+
+    public void write(final BufferedWriter writer) throws IOException {
+        Main.GSON.toJson(this, this.getClass(), writer);
     }
 
 }

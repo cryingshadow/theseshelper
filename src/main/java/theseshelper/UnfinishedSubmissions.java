@@ -2,6 +2,7 @@ package theseshelper;
 
 import java.io.*;
 import java.nio.file.*;
+import java.time.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -14,9 +15,10 @@ public class UnfinishedSubmissions extends ArrayList<TopicSubmission> {
     }
 
     public UnfinishedSubmissions(final File root, final List<Integer> years) throws IOException {
+        final Date today = Date.from(Instant.now());
         for (final int currentYear : years) {
             for (final File resultFile : Main.findAllResultFiles(root, currentYear)) {
-                this.processResultFile(resultFile);
+                this.processResultFile(today, resultFile);
             }
         }
         Collections.sort(this);
@@ -57,7 +59,9 @@ public class UnfinishedSubmissions extends ArrayList<TopicSubmission> {
                 System.out.print("REGISTERED");
             }
             System.out.print("): ");
-            System.out.print(submission.student());
+            System.out.print(submission.studentGivenNames());
+            System.out.print(" ");
+            System.out.print(submission.studentFamilyNames());
             System.out.print(" (");
             System.out.print(submission.type());
             System.out.println(")");
@@ -79,7 +83,15 @@ public class UnfinishedSubmissions extends ArrayList<TopicSubmission> {
                     System.out.println(":");
                     for (final TopicSubmission submission : reviewerEntry.getValue()) {
                         System.out.print("    ");
-                        System.out.println(submission.student());
+                        System.out.print(submission.studentGivenNames());
+                        System.out.print(" ");
+                        System.out.print(submission.studentFamilyNames());
+                        if (submission.colloquium().isPresent()) {
+                            System.out.print(" (");
+                            System.out.print(Result.FORMAT.format(submission.colloquium().get()));
+                            System.out.print(")");
+                        }
+                        System.out.println();
                     }
                     System.out.println("    Total: " + reviewerEntry.getValue().size());
                 }
@@ -102,28 +114,46 @@ public class UnfinishedSubmissions extends ArrayList<TopicSubmission> {
         );
     }
 
-    private void processResultFile(final File resultFile) throws IOException {
+    private boolean isUnfinished(
+        final String type,
+        final String due,
+        final Optional<String> grade,
+        final Date today,
+        final Optional<Date> colloquium
+    ) {
+        System.out.println(type);
+        return due != null
+            && !due.isBlank()
+            && (!type.startsWith("Praxisarbeiten") || !grade.isEmpty())
+            && (colloquium.isEmpty() || today.after(colloquium.get()));
+    }
+
+    private void processResultFile(final Date today, final File resultFile) throws IOException {
         Main.LOGGER.log(Level.FINEST, "Checking result file: " + resultFile.toString());
         final Result result = Result.create(resultFile);
-        if (result.optionalPoints().isEmpty()) {
-            try {
-                final Path grandparentPath = resultFile.toPath().getParent().getParent();
-                final boolean secondReviewer =
-                    "Zweitgutachten".equals(grandparentPath.getParent().getFileName().toString());
+        try {
+            final Path grandparentPath = resultFile.toPath().getParent().getParent();
+            final boolean secondReviewer =
+                "Zweitgutachten".equals(grandparentPath.getParent().getFileName().toString());
+            final String type = grandparentPath.getFileName().toString() + (secondReviewer ? "2" : "");
+            final Optional<Date> colloquium = result.colloquiumDate();
+            if (this.isUnfinished(type, result.due(), result.optionalGrade(), today, colloquium)) {
                 this.add(
                     new TopicSubmission(
-                        grandparentPath.getFileName().toString() + (secondReviewer ? "2" : ""),
-                        result.name(),
+                        type,
+                        result.givennames(),
+                        result.familynames(),
                         result.dueDate(),
                         UnfinishedSubmissions.containsPDF(resultFile),
                         result.optionalOtherReviewer(),
                         !secondReviewer,
+                        colloquium,
                         result.optionalLocation().orElse("")
                     )
                 );
-            } catch (IllegalStateException | IndexOutOfBoundsException e) {
-                throw new IOException(result.name() + ", " + result.title(), e);
             }
+        } catch (IllegalStateException | IndexOutOfBoundsException e) {
+            throw new IOException(result.givennames() + " " + result.familynames() + ", " + result.title(), e);
         }
         Main.LOGGER.log(Level.FINEST, "Check done!");
     }

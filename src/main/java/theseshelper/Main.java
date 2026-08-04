@@ -273,17 +273,12 @@ public class Main {
         if (fileContent.title().isBlank() || (fileContent.grade() != null && !fileContent.grade().isBlank())) {
             return;
         }
-        final String[] nameParts = fileContent.name().split(" ");
-        final StringBuilder namePartsWithoutLast = new StringBuilder();
-        for (int i = 0; i < nameParts.length - 1; i++) {
-            namePartsWithoutLast.append(nameParts[i]);
-        }
         final String prefix =
             String.format(
                 "gutachten%d%s%s%s",
                 year,
-                nameParts[nameParts.length - 1],
-                namePartsWithoutLast.toString(),
+                fileContent.familynames().replaceAll(" ", ""),
+                fileContent.givennames().replaceAll(" ", ""),
                 thesisType.name()
             );
         final File reviewFile = directory.resolve(String.format("%s.json", prefix)).toFile();

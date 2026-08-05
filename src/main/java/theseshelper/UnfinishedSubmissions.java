@@ -14,31 +14,30 @@ public class UnfinishedSubmissions extends ArrayList<TopicSubmission> {
         return Arrays.stream(resultFile.getParentFile().list()).anyMatch(file -> file.toLowerCase().matches(".*pdf"));
     }
 
+    private final Date today;
+
     public UnfinishedSubmissions(final File root, final List<Integer> years) throws IOException {
-        final Date today = Date.from(Instant.now());
+        this();
         for (final int currentYear : years) {
             for (final File resultFile : Main.findAllResultFiles(root, currentYear)) {
-                this.processResultFile(today, resultFile);
+                this.processResultFile(resultFile);
             }
         }
         Collections.sort(this);
     }
 
     private UnfinishedSubmissions() {
-        super();
+        this.today = Date.from(Instant.now());
     }
 
     public void write() {
         final Map<String, Integer> registered = new TreeMap<String, Integer>();
         final Map<String, Integer> submitted = new TreeMap<String, Integer>();
+        final Map<String, Integer> graded = new TreeMap<String, Integer>();
         final Map<String, Map<String, UnfinishedSubmissions>> colloquia =
             new TreeMap<String, Map<String, UnfinishedSubmissions>>();
         for (final TopicSubmission submission : this) {
-            switch (submission.type()) {
-            case "Bachelor":
-            case "Bachelor2":
-            case "Master":
-            case "Master2":
+            if (this.hasColloquiumPending(this.today, submission)) {
                 if (!colloquia.containsKey(submission.location())) {
                     colloquia.put(submission.location(), new TreeMap<String, UnfinishedSubmissions>());
                 }
@@ -51,7 +50,10 @@ public class UnfinishedSubmissions extends ArrayList<TopicSubmission> {
             }
             System.out.print(Result.FORMAT.format(submission.due()));
             System.out.print(" (");
-            if (submission.submitted()) {
+            if (submission.graded()) {
+                graded.merge(submission.type(), 1, Integer::sum);
+                System.out.print("GRADED");
+            } else if (submission.submitted()) {
                 submitted.merge(submission.type(), 1, Integer::sum);
                 System.out.print("SUBMITTED");
             } else {
@@ -81,6 +83,7 @@ public class UnfinishedSubmissions extends ArrayList<TopicSubmission> {
                     System.out.print("  ");
                     System.out.print(reviewerEntry.getKey());
                     System.out.println(":");
+                    Collections.sort(reviewerEntry.getValue(), TopicSubmission.COLLOQUIA_COMPARATOR);
                     for (final TopicSubmission submission : reviewerEntry.getValue()) {
                         System.out.print("    ");
                         System.out.print(submission.studentGivenNames());
@@ -105,31 +108,40 @@ public class UnfinishedSubmissions extends ArrayList<TopicSubmission> {
         for (final Map.Entry<String, Integer> entry : submitted.entrySet()) {
             System.out.println(String.format("Submitted %s: %d", entry.getKey(), entry.getValue()));
         }
+        for (final Map.Entry<String, Integer> entry : graded.entrySet()) {
+            System.out.println(String.format("Graded %s: %d", entry.getKey(), entry.getValue()));
+        }
         System.out.println(
             String.format(
                 "Total: %d",
                 registered.values().stream().mapToInt(Integer::intValue).sum()
                 + submitted.values().stream().mapToInt(Integer::intValue).sum()
+                + graded.values().stream().mapToInt(Integer::intValue).sum()
             )
         );
+    }
+
+    private boolean hasColloquiumPending(final Date today, final TopicSubmission submission) {
+        return
+            !submission.type().startsWith("Praxisarbeiten")
+            && (submission.colloquium().isEmpty() || today.before(submission.colloquium().get()));
     }
 
     private boolean isUnfinished(
         final String type,
         final String due,
         final Optional<String> grade,
-        final Date today,
-        final Optional<Date> colloquium
+        final Optional<Date> colloquiumDate
     ) {
         return
             due != null
             && !due.isBlank()
             && (!type.startsWith("Praxisarbeiten") || grade.isEmpty())
             && (grade.isEmpty() || !"5,0".equals(grade.get()))
-            && (colloquium.isEmpty() || today.after(colloquium.get()));
+            && (colloquiumDate.isEmpty() || this.today.before(colloquiumDate.get()));
     }
 
-    private void processResultFile(final Date today, final File resultFile) throws IOException {
+    private void processResultFile(final File resultFile) throws IOException {
         Main.LOGGER.log(Level.FINEST, "Checking result file: " + resultFile.toString());
         final Result result = Result.create(resultFile);
         try {
@@ -137,8 +149,8 @@ public class UnfinishedSubmissions extends ArrayList<TopicSubmission> {
             final boolean secondReviewer =
                 "Zweitgutachten".equals(grandparentPath.getParent().getFileName().toString());
             final String type = grandparentPath.getFileName().toString() + (secondReviewer ? "2" : "");
-            final Optional<Date> colloquium = result.optionalColloquiumDate();
-            if (this.isUnfinished(type, result.due(), result.optionalThesisGrade(), today, colloquium)) {
+            final Optional<Date> colloquiumDate = result.optionalColloquiumDate();
+            if (this.isUnfinished(type, result.due(), result.optionalThesisGrade(), colloquiumDate)) {
                 this.add(
                     new TopicSubmission(
                         type,
@@ -146,9 +158,10 @@ public class UnfinishedSubmissions extends ArrayList<TopicSubmission> {
                         result.familynames(),
                         result.dueDate(),
                         UnfinishedSubmissions.containsPDF(resultFile),
+                        result.thesisgrade() != null && !result.thesisgrade().isBlank(),
                         result.optionalOtherReviewer(),
                         !secondReviewer,
-                        colloquium,
+                        colloquiumDate,
                         result.optionalLocation().orElse("")
                     )
                 );

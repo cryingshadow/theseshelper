@@ -8,6 +8,7 @@ public record TopicSubmission(
     String studentFamilyNames,
     Date due,
     boolean submitted,
+    boolean graded,
     Optional<String> otherExaminer,
     boolean firstExaminer,
     Optional<Date> colloquium,
@@ -21,6 +22,14 @@ public record TopicSubmission(
             LexicographicComparator.toComparator(TopicSubmission::studentFamilyNames),
             LexicographicComparator.toComparator(TopicSubmission::studentGivenNames),
             LexicographicComparator.toComparator((final TopicSubmission s) -> s.otherExaminer().orElse(""))
+        );
+
+    public static final Comparator<TopicSubmission> COLLOQUIA_COMPARATOR =
+        new LexicographicComparator<TopicSubmission>(
+            LexicographicComparator.toComparator((final TopicSubmission s) -> s.colloquium().orElse(null)),
+            LexicographicComparator.toComparator((final TopicSubmission s) -> s.otherExaminer().orElse("")),
+            LexicographicComparator.toComparator(TopicSubmission::studentFamilyNames),
+            LexicographicComparator.toComparator(TopicSubmission::studentGivenNames)
         );
 
     @Override

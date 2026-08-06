@@ -6,9 +6,11 @@ public enum Flag implements Parameter {
 
     DIRECTORY("d", "directory", "Root directory."),
 
+    HELP("h", "help", "Help for execution mode."),
+
     INPUT("i", "input", "File for input."),
 
-    MODE("m", "mode", "Execution mode (STATISTICS, CLASS, LIST, QUIZ, REVIEWER, CRITERIA, TALK)."),
+    MODE("m", "mode", "Execution mode (CRITERIA, POINTS, PREPARATION, REVIEW, SPELLCHECK, STATISTICS, UNFINISHED)."),
 
     OUTPUT("o", "output", "File for output."),
 

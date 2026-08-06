@@ -1,6 +1,7 @@
 package theseshelper;
 
 import java.util.*;
+import java.util.stream.*;
 
 public enum Mode {
 
@@ -11,6 +12,8 @@ public enum Mode {
     PREPARATION("Prepare theses for year.", Set.of(Flag.DIRECTORY, Flag.YEAR)),
 
     REVIEW("Create review.", Set.of(Flag.INPUT)),
+
+    SPELLCHECK("Spell check theses for year.", Set.of(Flag.DIRECTORY, Flag.YEAR)),
 
     STATISTICS(
         "Compile statistics for year(s).",
@@ -26,6 +29,14 @@ public enum Mode {
     private Mode(final String description, final Set<Flag> parameters) {
         this.description = description;
         this.parameters = parameters;
+    }
+
+    public String help() {
+        return String.format(
+            "%s (%s)",
+            this.description,
+            this.parameters.stream().map(Flag::name).collect(Collectors.joining(", "))
+        );
     }
 
 }

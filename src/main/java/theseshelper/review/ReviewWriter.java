@@ -363,7 +363,7 @@ public abstract class ReviewWriter {
             }
             writer.write(" gewährt.\n");
         }
-        final int achieved = review.evaluate().intValue();
+        final int achieved = review.evaluate();
         writer.write("Insgesamt wurde");
         if (achieved == 1) {
             writer.write(" 1 Punkt");

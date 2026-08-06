@@ -13,6 +13,14 @@ public record ReviewEvaluation(
     EvaluationMode mode
 ) {
 
+    public ReviewEvaluation(final String criterion, final BigFraction weight) {
+        this(criterion, null, weight, null, null, null);
+    }
+
+    public ReviewEvaluation(final String criterion, final BigFraction weight, final EvaluationMode mode) {
+        this(criterion, null, weight, null, null, mode);
+    }
+
     public BigFraction evaluate(final BigFraction total, final BigFraction weightSum) {
         if (this.unused()) {
             return BigFraction.ZERO;

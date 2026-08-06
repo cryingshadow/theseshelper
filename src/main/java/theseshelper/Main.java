@@ -36,6 +36,8 @@ public class Main {
 
     private static final String PA = "Praxisarbeiten";
 
+    private static final String REDUCED = "reduced.txt";
+
     private static final String RESULT = "result.json";
 
     private static final String SECOND = "Zweitgutachten";
@@ -43,6 +45,8 @@ public class Main {
     private static final String STATISTICS = "Statistik";
 
     private static final String STATISTICS_FILE = "statistics%s%s%s.tex";
+
+    private static final String TEXT = "text.txt";
 
     static {
         LOGGER = LogManager.getLogManager().getLogger("");
@@ -63,6 +67,10 @@ public class Main {
             return;
         }
         final Parameters<Flag> options = tamer.parse(args);
+        if (options.containsKey(Flag.HELP)) {
+            System.out.println(Mode.valueOf(options.get(Flag.HELP)).help());
+            return;
+        }
         if (options.getAsBooleanOrDefault(Flag.VERBOSITY, false)) {
             Main.LOGGER.setLevel(Level.ALL);
         } else {
@@ -95,6 +103,10 @@ public class Main {
         case PREPARATION:
             Main.LOGGER.log(Level.FINE, "Preparing reviews...");
             Main.prepare(root, year);
+            return;
+        case SPELLCHECK:
+            Main.LOGGER.log(Level.FINE, "Spellchecking theses...");
+            Main.spellcheck(root, year);
             return;
         case REVIEW:
             Main.LOGGER.log(Level.FINE, "Creating review tex file...");
@@ -317,8 +329,34 @@ public class Main {
         }
     }
 
-    private static boolean errorFileExists(final File resultFile) {
-        return resultFile.toPath().getParent().resolve(Main.ERROR).toFile().exists();
+    private static void createTextFileIfNotExists(final File resultFile) throws IOException, InterruptedException {
+        if (Arrays.stream(resultFile.getParentFile().list()).filter(name -> name.endsWith(".pdf")).count() != 1) {
+            return;
+        }
+        final File pdf =
+            Arrays
+            .stream(resultFile.getParentFile().listFiles())
+            .filter(file -> file.getName().endsWith(".pdf"))
+            .findAny()
+            .get();
+        final File directory = resultFile.getParentFile().getAbsoluteFile();
+        final File textFile = directory.toPath().resolve(Main.TEXT).toFile();
+        if (
+            !textFile.exists()
+            && new ProcessBuilder()
+            .directory(directory)
+            .command("cmd.exe", "/c", String.format("pdftotext \"%s\" text.txt", pdf.getName().replaceAll(" ", "\\ ")))
+            .start()
+            .waitFor() != 0
+        ) {
+            throw new IOException(
+                String.format(
+                    "Non-zero exit code! Command: pdftotext, Directory: %s, File: %s",
+                    directory.toString(),
+                    pdf.getName()
+                )
+            );
+        }
     }
 
     private static List<File> findResultFiles(final Path thesisTypePath, final int year) throws IOException {
@@ -388,61 +426,38 @@ public class Main {
     private static void prepare(final File root, final int year) throws IOException, InterruptedException {
         for (final File resultFile : Main.findAllResultFiles(root, year)) {
             Main.LOGGER.log(Level.FINE, "Preparing result file: " + resultFile.toString());
-            if (!Main.errorFileExists(resultFile)) {
-                Main.LOGGER.log(Level.FINE, "Spell checking result file: " + resultFile.toString());
-                Main.spellcheck(resultFile);
-            }
+            Main.createTextFileIfNotExists(resultFile);
             Main.createOrUpdateReviewFiles(resultFile, year);
-            Main.LOGGER.log(Level.FINE, "Preparation done!");
         }
     }
 
-    private static void spellcheck(final File resultFile) throws IOException, InterruptedException {
-        if (Arrays.stream(resultFile.getParentFile().list()).filter(name -> name.endsWith(".pdf")).count() != 1) {
-            return;
-        }
-        final File pdf =
-            Arrays
-            .stream(resultFile.getParentFile().listFiles())
-            .filter(file -> file.getName().endsWith(".pdf"))
-            .findAny()
-            .get();
-        final File directory = resultFile.getParentFile().getAbsoluteFile();
-        final File textFile = directory.toPath().resolve("text.txt").toFile();
-        if (
-            !textFile.exists() &&
-            new ProcessBuilder()
-            .directory(directory)
-            .command("cmd.exe", "/c", String.format("pdftotext \"%s\" text.txt", pdf.getName().replaceAll(" ", "\\ ")))
-            .start()
-            .waitFor() != 0
-        ) {
-            throw new IOException(
-                String.format(
-                    "Non-zero exit code! Command: pdftotext, Directory: %s, File: %s",
-                    directory.toString(),
-                    pdf.getName()
-                )
-            );
-        }
-        final File errorsFile = directory.toPath().resolve("errors.txt").toFile();
-        if (
-            !errorsFile.exists() &&
-            new ProcessBuilder()
-            .directory(directory)
-            .command(
-                "java",
-                "-jar",
-                "..\\..\\..\\..\\spella.jar",
-                "text.txt",
-                "errors.txt",
-                "..\\..\\..\\..\\..\\templates\\personal.txt"
-            ).start()
-            .waitFor() != 0
-        ) {
-            throw new IOException(
-                String.format("Non-zero exit code! Command: spella, Directory: %s", directory.toString())
-            );
+    private static void spellcheck(final File root, final int year) throws IOException, InterruptedException {
+        for (final File resultFile : Main.findAllResultFiles(root, year)) {
+            final File directory = resultFile.getParentFile().getAbsoluteFile();
+            final File errorsFile = directory.toPath().resolve(Main.ERROR).toFile();
+            final File reducedFile = directory.toPath().resolve(Main.REDUCED).toFile();
+            final String fileName = resultFile.toString();
+            Main.LOGGER.log(Level.FINE, "Spell checking result file: " + fileName);
+            if (
+                !errorsFile.exists()
+                && reducedFile.exists()
+                && new ProcessBuilder()
+                .directory(directory)
+                .command(
+                    "java",
+                    "-jar",
+                    "..\\..\\..\\..\\spella.jar",
+                    Main.REDUCED,
+                    Main.ERROR,
+                    "..\\..\\..\\..\\..\\templates\\personal.txt"
+                    ).start()
+                .waitFor() != 0
+            ) {
+                throw new IOException(
+                    String.format("Non-zero exit code! Command: spella, Directory: %s", directory.toString())
+                );
+            }
+            Main.LOGGER.log(Level.FINE, String.format("Spell checking %s done!", fileName));
         }
     }
 

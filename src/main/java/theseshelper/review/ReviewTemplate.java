@@ -7,6 +7,54 @@ import theseshelper.*;
 
 public abstract class ReviewTemplate {
 
+    private static final List<ReviewEvaluation> FORMAL =
+        List.of(
+            new ReviewEvaluation("appearance", BigFraction.ONE),
+            new ReviewEvaluation("distances", BigFraction.ONE),
+            new ReviewEvaluation("lists", BigFraction.ONE),
+            new ReviewEvaluation("spelling", BigFraction.TWO, EvaluationMode.SPELLING),
+            new ReviewEvaluation("grammar", BigFraction.TWO),
+            new ReviewEvaluation("punctuation", BigFraction.ONE),
+            new ReviewEvaluation("language", BigFraction.TWO),
+            new ReviewEvaluation("figuresquality", BigFraction.TWO),
+            new ReviewEvaluation("quotingstyle", BigFraction.ONE),
+            new ReviewEvaluation("quotinglookup", BigFraction.ONE),
+            new ReviewEvaluation("literaturestyle", BigFraction.ONE),
+            new ReviewEvaluation("literatureprops", BigFraction.TWO),
+            new ReviewEvaluation("diligence", BigFraction.ONE)
+        );
+
+    private static final List<ReviewEvaluation> STRUCTURE =
+        List.of(
+            new ReviewEvaluation("toccontributions", BigFraction.ONE),
+            new ReviewEvaluation("tocmethods", BigFraction.ONE),
+            new ReviewEvaluation("titlematch", BigFraction.ONE),
+            new ReviewEvaluation("goal", BigFraction.TWO),
+            new ReviewEvaluation("contributions", BigFraction.TWO),
+            new ReviewEvaluation("methodoverview", BigFraction.ONE),
+            new ReviewEvaluation("structureoverview", BigFraction.ONE),
+            new ReviewEvaluation("structurequality", BigFraction.ONE),
+            new ReviewEvaluation("structurebridge", BigFraction.ONE),
+            new ReviewEvaluation("structurefast", BigFraction.ONE),
+            new ReviewEvaluation("references", BigFraction.ONE),
+            new ReviewEvaluation("basicscontributionsfit", BigFraction.ONE),
+            new ReviewEvaluation("illustration", new BigFraction(4)),
+            new ReviewEvaluation("future", BigFraction.ONE),
+            new ReviewEvaluation("conclusioncontribution", BigFraction.ONE),
+            new ReviewEvaluation("conclusiongoal", BigFraction.ONE),
+            new ReviewEvaluation("conclusionvalue", BigFraction.ONE)
+        );
+
+    private static final List<ReviewEvaluation> VALUE =
+        List.of(
+            new ReviewEvaluation("effort", BigFraction.TWO),
+            new ReviewEvaluation("relevance", BigFraction.TWO),
+            new ReviewEvaluation("innovativeness", BigFraction.ONE),
+            new ReviewEvaluation("level", BigFraction.ONE),
+            new ReviewEvaluation("applicability", BigFraction.TWO),
+            new ReviewEvaluation("value", BigFraction.TWO)
+        );
+
     public static Review selectReviewTemplate(final ThesisType thesisType, final Result resultFile) {
         return new Review(
             true,
@@ -42,20 +90,7 @@ public abstract class ReviewTemplate {
                 new ReviewEvaluationGroup(
                     "Aufbau der Arbeit, Strukturierung der Bearbeitung",
                     new BigFraction(15, 100),
-                    List.of(
-                        new ReviewEvaluation("tocquality", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("lists", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("goal", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("contributions", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("methodoverview", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("structureoverview", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("structurequality", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("references", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("basicscontributionsfit", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("illustration", null, new BigFraction(4), null, null, null),
-                        new ReviewEvaluation("future", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("conclusion", null, BigFraction.ONE, null, null, null)
-                    ),
+                    ReviewTemplate.STRUCTURE,
                     null,
                     null,
                     "\\pagebreak",
@@ -65,24 +100,24 @@ public abstract class ReviewTemplate {
                     "Wissenschaftliches Vorgehen",
                     new BigFraction(40, 100),
                     List.of(
-                        new ReviewEvaluation("literatureamount", null, new BigFraction(4), null, null, null),
-                        new ReviewEvaluation("literaturequality", null, new BigFraction(4), null, null, null),
-                        new ReviewEvaluation("quotingapplication", null, new BigFraction(4), null, null, null),
-                        new ReviewEvaluation("relatedlookup", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("relatedamount", null, new BigFraction(4), null, null, null),
-                        new ReviewEvaluation("relatedcontent", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("relateddifference", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("relatednew", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("basicscorrect", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("methodintro", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("methodreason", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("methodcover", null, new BigFraction(3), null, null, null),
-                        new ReviewEvaluation("methodapplication", null, new BigFraction(4), null, null, null),
-                        new ReviewEvaluation("objectivity", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("reliability", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("validity", null, new BigFraction(4), null, null, null),
-                        new ReviewEvaluation("limitations", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("comprehensibility", null, new BigFraction(4), null, null, null)
+                        new ReviewEvaluation("literatureamount", new BigFraction(4)),
+                        new ReviewEvaluation("literaturequality", new BigFraction(4)),
+                        new ReviewEvaluation("quotingapplication", new BigFraction(4)),
+                        new ReviewEvaluation("relatedlookup", BigFraction.ONE),
+                        new ReviewEvaluation("relatedamount", new BigFraction(4)),
+                        new ReviewEvaluation("relatedcontent", BigFraction.ONE),
+                        new ReviewEvaluation("relateddifference", BigFraction.ONE),
+                        new ReviewEvaluation("relatednew", BigFraction.ONE),
+                        new ReviewEvaluation("basicscorrect", BigFraction.ONE),
+                        new ReviewEvaluation("methodintro", BigFraction.ONE),
+                        new ReviewEvaluation("methodreason", BigFraction.ONE),
+                        new ReviewEvaluation("methodcover", new BigFraction(3)),
+                        new ReviewEvaluation("methodapplication", new BigFraction(4)),
+                        new ReviewEvaluation("objectivity", BigFraction.TWO),
+                        new ReviewEvaluation("reliability", BigFraction.TWO),
+                        new ReviewEvaluation("validity", new BigFraction(4)),
+                        new ReviewEvaluation("limitations", BigFraction.TWO),
+                        new ReviewEvaluation("comprehensibility", new BigFraction(4))
                     ),
                     null,
                     null,
@@ -92,14 +127,7 @@ public abstract class ReviewTemplate {
                 new ReviewEvaluationGroup(
                     "Praktische Relevanz der Arbeit, Umsetzbarkeit der erarbeiteten Ergebnisse",
                     new BigFraction(30, 100),
-                    List.of(
-                        new ReviewEvaluation("effort", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("innovativeness", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("relevance", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("level", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("applicability", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("value", null, BigFraction.TWO, null, null, null)
-                    ),
+                    ReviewTemplate.VALUE,
                     null,
                     null,
                     "\\pagebreak",
@@ -108,20 +136,7 @@ public abstract class ReviewTemplate {
                 new ReviewEvaluationGroup(
                     "Formale Ordnungsmäßigkeit der Arbeit",
                     new BigFraction(15, 100),
-                    List.of(
-                        new ReviewEvaluation("appearance", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("distances", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("spelling", null, BigFraction.TWO, null, null, EvaluationMode.SPELLING),
-                        new ReviewEvaluation("grammar", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("punctuation", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("language", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("figuresquality", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("quotingstyle", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("quotinglookup", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("literaturestyle", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("literatureprops", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("diligence", null, BigFraction.ONE, null, null, null)
-                    ),
+                    ReviewTemplate.FORMAL,
                     null,
                     null,
                     "\\pagebreak",
@@ -133,25 +148,7 @@ public abstract class ReviewTemplate {
                 new ReviewEvaluationGroup(
                     "Aufbau der Arbeit, Strukturierung der Bearbeitung",
                     new BigFraction(20, 100),
-                    List.of(
-                        new ReviewEvaluation("toccontributions", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("tocmethods", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("titlematch", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("lists", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("goal", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("contributions", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("methodoverview", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("structureoverview", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("structurequality", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("structurebridge", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("structurefast", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("references", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("basicscontributionsfit", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("illustration", null, new BigFraction(4), null, null, null),
-                        new ReviewEvaluation("future", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("conclusioncontribution", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("conclusiongoal", null, BigFraction.ONE, null, null, null)
-                    ),
+                    ReviewTemplate.STRUCTURE,
                     null,
                     null,
                     "\\pagebreak",
@@ -161,24 +158,24 @@ public abstract class ReviewTemplate {
                     "Wissenschaftliches Vorgehen",
                     new BigFraction(30, 100),
                     List.of(
-                        new ReviewEvaluation("literatureamount", null, new BigFraction(3), null, null, null),
-                        new ReviewEvaluation("literaturequality", null, new BigFraction(3), null, null, null),
-                        new ReviewEvaluation("quotingapplication", null, new BigFraction(3), null, null, null),
-                        new ReviewEvaluation("relatedlookup", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("relatedamount", null, new BigFraction(3), null, null, null),
-                        new ReviewEvaluation("relatedcontent", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("relateddifference", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("relatednew", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("basicscorrect", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("methodintro", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("methodreason", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("methodcover", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("methodapplication", null, new BigFraction(3), null, null, null),
-                        new ReviewEvaluation("objectivity", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("reliability", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("validity", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("limitations", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("comprehensibility", null, new BigFraction(3), null, null, null)
+                        new ReviewEvaluation("literatureamount", new BigFraction(3)),
+                        new ReviewEvaluation("literaturequality", new BigFraction(3)),
+                        new ReviewEvaluation("quotingapplication", new BigFraction(3)),
+                        new ReviewEvaluation("relatedlookup", BigFraction.ONE),
+                        new ReviewEvaluation("relatedamount", new BigFraction(3)),
+                        new ReviewEvaluation("relatedcontent", BigFraction.ONE),
+                        new ReviewEvaluation("relateddifference", BigFraction.ONE),
+                        new ReviewEvaluation("relatednew", BigFraction.ONE),
+                        new ReviewEvaluation("basicscorrect", BigFraction.ONE),
+                        new ReviewEvaluation("methodintro", BigFraction.ONE),
+                        new ReviewEvaluation("methodreason", BigFraction.ONE),
+                        new ReviewEvaluation("methodcover", BigFraction.TWO),
+                        new ReviewEvaluation("methodapplication", new BigFraction(3)),
+                        new ReviewEvaluation("objectivity", BigFraction.TWO),
+                        new ReviewEvaluation("reliability", BigFraction.TWO),
+                        new ReviewEvaluation("validity", BigFraction.TWO),
+                        new ReviewEvaluation("limitations", BigFraction.TWO),
+                        new ReviewEvaluation("comprehensibility", new BigFraction(3))
                     ),
                     null,
                     null,
@@ -188,14 +185,7 @@ public abstract class ReviewTemplate {
                 new ReviewEvaluationGroup(
                     "Praktische Relevanz der Arbeit, Umsetzbarkeit der erarbeiteten Ergebnisse",
                     new BigFraction(30, 100),
-                    List.of(
-                        new ReviewEvaluation("effort", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("innovativeness", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("relevance", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("level", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("applicability", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("value", null, BigFraction.TWO, null, null, null)
-                    ),
+                    ReviewTemplate.VALUE,
                     null,
                     null,
                     "\\pagebreak",
@@ -204,20 +194,7 @@ public abstract class ReviewTemplate {
                 new ReviewEvaluationGroup(
                     "Formale Ordnungsmäßigkeit der Arbeit",
                     new BigFraction(20, 100),
-                    List.of(
-                        new ReviewEvaluation("appearance", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("distances", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("spelling", null, BigFraction.TWO, null, null, EvaluationMode.SPELLING),
-                        new ReviewEvaluation("grammar", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("punctuation", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("language", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("figuresquality", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("quotingstyle", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("quotinglookup", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("literaturestyle", null, BigFraction.ONE, null, null, null),
-                        new ReviewEvaluation("literatureprops", null, BigFraction.TWO, null, null, null),
-                        new ReviewEvaluation("diligence", null, BigFraction.ONE, null, null, null)
-                    ),
+                    ReviewTemplate.FORMAL,
                     null,
                     null,
                     "\\pagebreak",
@@ -231,9 +208,9 @@ public abstract class ReviewTemplate {
         switch (thesisType) {
         case BA:
         case PA:
-            return "BA 4.0";
+            return "BA 4.1";
         case MA:
-            return "MA 4.0";
+            return "MA 4.1";
         default:
             throw new IllegalArgumentException("No version known for argument " + thesisType.title + "!");
         }

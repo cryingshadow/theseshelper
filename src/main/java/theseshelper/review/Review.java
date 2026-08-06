@@ -64,13 +64,13 @@ public record Review(
                 new BigFraction(Integer.parseInt(parts[0].strip()), Integer.parseInt(parts[1].strip()));
     }
 
-    public BigFraction evaluate() {
+    public int evaluate() {
         return
             this.evaluationGroups()
             .stream()
-            .map(g -> g.evaluate(this.totalExpected(), this.weightSum()))
-            .reduce(BigFraction.ZERO, (x, y) -> x.add(y))
-            .add(this.bonus() == null ? BigFraction.ZERO : this.bonus());
+            .map(g -> g.evaluate(this.totalExpected(), this.weightSum()).intValue())
+            .reduce(0, Integer::sum)
+            + (this.bonus() == null ? 0 : this.bonus().intValue());
     }
 
     public boolean hasUnusedCriterion() {

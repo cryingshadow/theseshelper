@@ -211,7 +211,9 @@ public abstract class ReviewWriter {
             ReviewWriter.writeKiviatDiagram(group, criteria, writer);
         }
         writer.write("\\begin{flushright}{Bewertung: ");
-        writer.write(String.valueOf(group.evaluate(review.totalExpected(), weightSum).intValue()));
+        final BigFraction result = group.evaluate(review.totalExpected(), weightSum);
+        Main.LOGGER.log(Level.FINE, String.format("Evaluation %s: %s", group.title(), result.toString()));
+        writer.write(String.valueOf(result.intValue()));
         writer.write(" von ");
         writer.write(group.total(review.totalExpected(), weightSum).toString());
         writer.write(" Punkten}\\end{flushright}\n\n");

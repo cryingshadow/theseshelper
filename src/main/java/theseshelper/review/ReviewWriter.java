@@ -365,20 +365,33 @@ public abstract class ReviewWriter {
             }
             writer.write(" gewährt.\n");
         }
-        final int achieved = review.evaluate();
-        writer.write("Insgesamt wurde");
-        if (achieved == 1) {
-            writer.write(" 1 Punkt");
-        } else {
-            writer.write("n ");
-            writer.write(String.valueOf(achieved));
-            writer.write(" Punkte");
+        if (review.totalStart() != null && !review.totalStart().isBlank()) {
+            writer.write(review.totalStart());
+            writer.write("\n");
         }
-        writer.write(" erreicht und das Gesamturteil lautet:\n");
-        writer.write("\\begin{center}{\\large\\textbf{");
+        final int achieved = review.evaluate();
         final BigFraction percentage = new BigFraction(achieved).divide(review.totalExpected());
-        writer.write(ReviewWriter.toGrade(percentage));
-        writer.write("}}\\end{center}\n\n");
+        if (review.alternativeTotalText() != null && !review.alternativeTotalText().isBlank()) {
+            writer.write(review.alternativeTotalText());
+            writer.write("\n");
+        } else {
+            writer.write("Insgesamt wurde");
+            if (achieved == 1) {
+                writer.write(" 1 Punkt");
+            } else {
+                writer.write("n ");
+                writer.write(String.valueOf(achieved));
+                writer.write(" Punkte");
+            }
+            writer.write(" erreicht und das Gesamturteil lautet:\n");
+            writer.write("\\begin{center}{\\large\\textbf{");
+            writer.write(ReviewWriter.toGrade(percentage));
+            writer.write("}}\\end{center}\n\n");
+        }
+        if (review.additionalTotalText() != null && !review.additionalTotalText().isBlank()) {
+            writer.write(review.additionalTotalText());
+            writer.write("\n");
+        }
         if (review.hasUnusedCriterion()) {
             writer.write("\\footnote{\\textcolor{red}{Nicht alle Kriterien wurden bewertet!}}\n\n");
         }

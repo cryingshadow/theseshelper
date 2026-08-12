@@ -23,7 +23,7 @@ public abstract class ReviewWriter {
             ReviewWriter.writeTotal(review, writer);
             ReviewWriter.writeSignature(review, writer);
             writer.write("\\pagebreak\n\n");
-            final BigFraction weightSum = review.weightSum();
+            final BigFraction weightSum = ReviewEvaluator.weightSum(review);
             for (final ReviewEvaluationGroup group : review.evaluationGroups()) {
                 ReviewWriter.writeGroup(group, criteria, weightSum, review, writer);
             }
@@ -32,64 +32,10 @@ public abstract class ReviewWriter {
         return result;
     }
 
-    private static boolean isCornerValue(final int percentage) {
-        switch (percentage) {
-        case 47:
-        case 48:
-        case 49:
-        case 58:
-        case 66:
-        case 71:
-        case 76:
-        case 80:
-        case 84:
-        case 88:
-        case 91:
-        case 96:
-            return true;
-        default:
-            return false;
-        }
-    }
-
     private static Criteria parseCriteria(final File reviewFile, final Review review) throws IOException {
         return Criteria.parseCriteria(
             reviewFile.toPath().toAbsolutePath().getParent().resolve(review.criteriaPath()).toFile()
         );
-    }
-
-    private static String toGrade(final BigFraction percent) {
-        if (percent.compareTo(new BigFraction(97,100)) >= 0) {
-            return "1{,}0";
-        }
-        if (percent.compareTo(new BigFraction(92,100)) >= 0) {
-            return "1{,}3";
-        }
-        if (percent.compareTo(new BigFraction(89,100)) >= 0) {
-            return "1{,}7";
-        }
-        if (percent.compareTo(new BigFraction(85,100)) >= 0) {
-            return "2{,}0";
-        }
-        if (percent.compareTo(new BigFraction(81,100)) >= 0) {
-            return "2{,}3";
-        }
-        if (percent.compareTo(new BigFraction(77,100)) >= 0) {
-            return "2{,}7";
-        }
-        if (percent.compareTo(new BigFraction(72,100)) >= 0) {
-            return "3{,}0";
-        }
-        if (percent.compareTo(new BigFraction(67,100)) >= 0) {
-            return "3{,}3";
-        }
-        if (percent.compareTo(new BigFraction(59,100)) >= 0) {
-            return "3{,}7";
-        }
-        if (percent.compareTo(new BigFraction(50,100)) >= 0) {
-            return "4{,}0";
-        }
-        return "5{,}0";
     }
 
     private static File toOutputFile(final File reviewFile) {
@@ -211,11 +157,19 @@ public abstract class ReviewWriter {
             ReviewWriter.writeKiviatDiagram(group, criteria, writer);
         }
         writer.write("\\begin{flushright}{Bewertung: ");
-        final BigFraction result = group.evaluate(review.totalExpected(), weightSum);
-        Main.LOGGER.log(Level.FINE, String.format("Evaluation %s: %s", group.title(), result.toString()));
+        final BigFraction result = ReviewEvaluator.evaluate(group, review.totalExpected(), weightSum);
+        Main.LOGGER.log(
+            Level.FINE,
+            String.format(
+                "Evaluation %s: %d + %s",
+                group.title(),
+                result.intValue(),
+                result.subtract(result.intValue()).toString()
+            )
+        );
         writer.write(String.valueOf(result.intValue()));
         writer.write(" von ");
-        writer.write(group.total(review.totalExpected(), weightSum).toString());
+        writer.write(ReviewEvaluator.total(group, review.totalExpected(), weightSum).toString());
         writer.write(" Punkten}\\end{flushright}\n\n");
     }
 
@@ -369,8 +323,7 @@ public abstract class ReviewWriter {
             writer.write(review.totalStart());
             writer.write("\n");
         }
-        final int achieved = review.evaluate();
-        final BigFraction percentage = new BigFraction(achieved).divide(review.totalExpected());
+        final int achieved = ReviewEvaluator.evaluate(review);
         if (review.alternativeTotalText() != null && !review.alternativeTotalText().isBlank()) {
             writer.write(review.alternativeTotalText());
             writer.write("\n");
@@ -385,7 +338,7 @@ public abstract class ReviewWriter {
             }
             writer.write(" erreicht und das Gesamturteil lautet:\n");
             writer.write("\\begin{center}{\\large\\textbf{");
-            writer.write(ReviewWriter.toGrade(percentage));
+            writer.write(ReviewEvaluator.toGradeForLaTeX(review));
             writer.write("}}\\end{center}\n\n");
         }
         if (review.additionalTotalText() != null && !review.additionalTotalText().isBlank()) {
@@ -395,10 +348,7 @@ public abstract class ReviewWriter {
         if (review.hasUnusedCriterion()) {
             writer.write("\\footnote{\\textcolor{red}{Nicht alle Kriterien wurden bewertet!}}\n\n");
         }
-        if (
-            ReviewWriter.isCornerValue(percentage.multiply(100).intValue())
-            && (review.corner() == null || !review.corner())
-        ) {
+        if (ReviewEvaluator.isCornerValue(review) && (review.corner() == null || !review.corner())) {
             writer.write("\\footnote{\\textcolor{red}{Ergebnis ist grenzwertig!}}\n\n");
         }
     }

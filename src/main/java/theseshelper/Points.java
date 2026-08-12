@@ -5,25 +5,25 @@ import java.util.*;
 
 public class Points {
 
-    public List<Thesis> bachelorFirst;
+    public List<Result> bachelorFirst;
 
-    public List<Thesis> bachelorSecondLong;
+    public List<Result> bachelorSecondLong;
 
-    public List<Thesis> bachelorSecondShort;
+    public List<Result> bachelorSecondShort;
 
-    public List<Thesis> masterFirst;
+    public List<Result> masterFirst;
 
-    public List<Thesis> masterSecondLong;
+    public List<Result> masterSecondLong;
 
-    public List<Thesis> masterSecondShort;
+    public List<Result> masterSecondShort;
 
     public List<LocalDate> practicalCheck;
 
-    public List<Thesis> practicalThesesFirst;
+    public List<Result> practicalThesesFirst;
 
-    public List<Thesis> practicalThesesSecondLong;
+    public List<Result> practicalThesesSecondLong;
 
-    public List<Thesis> practicalThesesSecondShort;
+    public List<Result> practicalThesesSecondShort;
 
     public int sum() {
         return this.bachelorFirst.size() * 3

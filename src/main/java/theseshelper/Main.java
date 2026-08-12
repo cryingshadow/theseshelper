@@ -3,11 +3,7 @@ package theseshelper;
 import java.io.*;
 import java.lang.reflect.*;
 import java.nio.charset.*;
-import java.nio.file.*;
-import java.time.*;
-import java.util.*;
 import java.util.logging.*;
-import java.util.stream.*;
 
 import com.google.gson.*;
 
@@ -16,43 +12,19 @@ import theseshelper.review.*;
 
 public class Main {
 
-    public static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+    public static final Gson GSON;
 
     public static final Logger LOGGER;
 
-    public static final Charset UTF8 = Charset.forName("UTF-8");
-
-    private static final String BACHELOR = "Bachelor";
-
-    private static final String COMPILE = "compile.sh";
-
-    private static final String ERROR = "errors.txt";
-
-    private static final String FIRST = "Erstgutachten";
-
-    private static final double[] GRADES = new double[] {1.0, 1.3, 1.7, 2.0, 2.3, 2.7, 3.0, 3.3, 3.7, 4.0, 5.0};
-
-    private static final String MASTER = "Master";
-
-    private static final String PA = "Praxisarbeiten";
-
-    private static final String REDUCED = "reduced.txt";
-
-    private static final String RESULT = "result.json";
-
-    private static final String SECOND = "Zweitgutachten";
-
-    private static final String STATISTICS = "Statistik";
-
-    private static final String STATISTICS_FILE = "statistics%s%s%s.tex";
-
-    private static final String TEXT = "text.txt";
+    public static final Charset UTF8;
 
     static {
         LOGGER = LogManager.getLogManager().getLogger("");
         final StreamHandler handler = new StreamHandler(System.out, new SimpleFormatter());
         handler.setLevel(Level.ALL);
         Main.LOGGER.addHandler(handler);
+        GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+        UTF8 = Charset.forName("UTF-8");
     }
 
     public static void main(final String[] args)
@@ -87,30 +59,34 @@ public class Main {
             if (options.containsKey(Flag.REVIEWER_TYPE)) {
                 final ReviewerType reviewerType = ReviewerType.valueOf(options.get(Flag.REVIEWER_TYPE));
                 final ThesisType thesisType = ThesisType.valueOf(options.getOrDefault(Flag.THESIS_TYPE, "ALL"));
-                Main.statistics(root, reviewerType, thesisType, years);
+                StatisticsWriter.statistics(root, reviewerType, thesisType, years);
             } else {
                 for (final ReviewerType reviewerType : ReviewerType.values()) {
                     for (final ThesisType thesisType : ThesisType.values()) {
-                        Main.statistics(root, reviewerType, thesisType, years);
+                        StatisticsWriter.statistics(root, reviewerType, thesisType, years);
                     }
                 }
             }
             return;
         case POINTS:
             Main.LOGGER.log(Level.FINE, "Calculating POINTS...");
-            Main.writePoints(Main.countPoints(root, year), root.toPath().resolve("points" + year + ".txt").toFile());
+            PointsWriter.writePoints(root, year);
             return;
         case PREPARATION:
             Main.LOGGER.log(Level.FINE, "Preparing reviews...");
-            Main.prepare(root, year);
+            ReviewPreparator.prepare(root, year);
             return;
         case SPELLCHECK:
             Main.LOGGER.log(Level.FINE, "Spellchecking theses...");
-            Main.spellcheck(root, year);
+            SpellChecker.spellcheck(root, year);
             return;
         case REVIEW:
             Main.LOGGER.log(Level.FINE, "Creating review tex file...");
             ReviewWriter.write(new File(options.get(Flag.INPUT)));
+            return;
+        case FINISH:
+            Main.LOGGER.log(Level.FINE, "Finishing review...");
+            ReviewFinisher.finish(new File(options.get(Flag.INPUT)));
             return;
         case UNFINISHED:
             Main.LOGGER.log(Level.FINE, "Computing unfinished reviews...");
@@ -129,516 +105,12 @@ public class Main {
         }
     }
 
-    static List<File> findAllResultFiles(final File root, final int year) throws IOException {
-        final Path rootPath = root.toPath();
-        final List<File> files = Main.findResultFiles(rootPath.resolve(Main.FIRST), ThesisType.ALL, year);
-        files.addAll(Main.findResultFiles(rootPath.resolve(Main.SECOND), ThesisType.ALL, year));
-        return files;
-    }
-
-    private static int[] countGrades(
-        final File root,
-        final int currentYear,
-        final ReviewerType reviewer,
-        final ThesisType type
-    ) throws IOException {
-        final List<File> files = new LinkedList<File>();
-        switch (reviewer) {
-        case ALL:
-            files.addAll(Main.findResultFiles(root.toPath().resolve(Main.FIRST), type, currentYear));
-            files.addAll(Main.findResultFiles(root.toPath().resolve(Main.SECOND), type, currentYear));
-            break;
-        case FIRST:
-            files.addAll(Main.findResultFiles(root.toPath().resolve(Main.FIRST), type, currentYear));
-            break;
-        case SECOND:
-            files.addAll(Main.findResultFiles(root.toPath().resolve(Main.SECOND), type, currentYear));
-            break;
-        default:
-            throw new IllegalStateException("Unknown Selection occurred!");
-        }
-        return Main.countGrades(files);
-    }
-
-    private static int[] countGrades(final List<File> files) throws IOException {
-        final int[] result = new int[Main.GRADES.length];
-        for (final File file : files) {
-            final Result resultFile = Result.create(file);
-            if (resultFile.optionalThesisGrade().isEmpty() || resultFile.thesisgrade().isBlank()) {
-                continue;
-            }
-            switch (resultFile.thesisgrade()) {
-            case "1,0":
-                result[0]++;
-                break;
-            case "1,3":
-                result[1]++;
-                break;
-            case "1,7":
-                result[2]++;
-                break;
-            case "2,0":
-                result[3]++;
-                break;
-            case "2,3":
-                result[4]++;
-                break;
-            case "2,7":
-                result[5]++;
-                break;
-            case "3,0":
-                result[6]++;
-                break;
-            case "3,3":
-                result[7]++;
-                break;
-            case "3,7":
-                result[8]++;
-                break;
-            case "4,0":
-                result[9]++;
-                break;
-            case "5,0":
-                result[10]++;
-                break;
-            default:
-                throw new IOException("Could not parse grade " + resultFile.thesisgrade() + "!");
-            }
-        }
-        return result;
-    }
-
-    private static Points countPoints(final File root, final int year) throws IOException {
-        final Points points = new Points();
-        final Path theses = root.toPath().resolve("Abschlussarbeiten");
-        final Path first = theses.resolve(Main.FIRST);
-        final Path second = theses.resolve(Main.SECOND);
-        points.bachelorFirst = Main.toTheses(Main.findResultFiles(first.resolve(Main.BACHELOR), year));
-        final List<File> bachelorSecond = Main.findResultFiles(second.resolve(Main.BACHELOR), year);
-        points.bachelorSecondLong = Main.toTheses(bachelorSecond.stream().filter(Main::isLong));
-        points.bachelorSecondShort = Main.toTheses(bachelorSecond.stream().filter(Main::isNotLong));
-        points.masterFirst = Main.toTheses(Main.findResultFiles(first.resolve(Main.MASTER), year));
-        final List<File> masterSecond = Main.findResultFiles(second.resolve(Main.MASTER), year);
-        points.masterSecondLong = Main.toTheses(masterSecond.stream().filter(Main::isLong));
-        points.masterSecondShort = Main.toTheses(masterSecond.stream().filter(Main::isNotLong));
-        points.practicalThesesFirst = Main.toTheses(Main.findResultFiles(first.resolve(Main.PA), year));
-        final List<File> paSecond = Main.findResultFiles(second.resolve(Main.PA), year);
-        points.practicalThesesSecondLong = Main.toTheses(paSecond.stream().filter(Main::isLong));
-        points.practicalThesesSecondShort = Main.toTheses(paSecond.stream().filter(Main::isNotLong));
-        points.practicalCheck =
-            Files
-            .list(root.toPath().resolve("Vorlesungen").resolve("Praxischeck").resolve("classes"))
-            .filter(path -> path.getFileName().toString().startsWith(String.valueOf(year - 2000)))
-            .map(
-                path -> {
-                    Path file;
-                    try {
-                        file =
-                            Files
-                            .list(path)
-                            .filter(f -> f.getFileName().toString().endsWith(".txt"))
-                            .findFirst()
-                            .get();
-                    } catch (final IOException e) {
-                        throw new IllegalStateException(e);
-                    }
-                    final String name = file.getFileName().toString();
-                    final String date = name.substring(0, name.length() - 4);
-                    return LocalDate.parse(
-                        String.format(
-                            "20%s-%s-%s",
-                            date.substring(0, 2),
-                            date.substring(2, 4),
-                            date.substring(4, 6)
-                        )
-                    );
-                }
-            ).toList();
-        return points;
-    }
-
-    private static void createCompileFileIfNotExists(final File jsonFile) throws IOException {
-        final File compileFile = jsonFile.toPath().getParent().resolve(Main.COMPILE).toFile();
-        if (!compileFile.exists()) {
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(compileFile, Main.UTF8))) {
-                final String name = jsonFile.getName();
-                final String nameWithoutSuffix = name.substring(0, name.length() - 5);
-                writer.write("#!/bin/bash\n\n");
-                writer.write("java -jar ../../../../theseshelper.jar -m REVIEW -i ");
-                writer.write(name);
-                writer.write("\n");
-                writer.write("pdflatex ");
-                writer.write(nameWithoutSuffix);
-                writer.write("\n");
-                writer.write("pdflatex ");
-                writer.write(nameWithoutSuffix);
-                writer.write("\n");
-            }
-            compileFile.setExecutable(true);
-        }
-    }
-
-    private static void createOrUpdateReviewFiles(final File resultFile, final int year) throws IOException {
-        final ThesisType thesisType = ThesisType.fromFile(resultFile);
-        final Path directory = resultFile.getAbsoluteFile().toPath().getParent();
-        final Result fileContent = Result.create(resultFile);
-        if (
-            fileContent.title().isBlank()
-            || (fileContent.thesisgrade() != null && !fileContent.thesisgrade().isBlank())
-        ) {
-            return;
-        }
-        final String prefix =
-            String.format(
-                "gutachten%d%s%s%s",
-                year,
-                fileContent.familynames().replaceAll(" ", ""),
-                fileContent.givennames().replaceAll(" ", ""),
-                thesisType.name()
-            );
-        final File reviewFile = directory.resolve(String.format("%s.json", prefix)).toFile();
-        Main.createCompileFileIfNotExists(reviewFile);
-        final Review template = ReviewTemplate.selectReviewTemplate(thesisType, fileContent);
-        if (reviewFile.exists()) {
-            final Review review = Review.parse(reviewFile);
-            if (Main.isEmptyAndOlderVersion(review, template)) {
-                Main.LOGGER.log(Level.FINE, "Updating templates for result file: " + resultFile.toString());
-            } else {
-                return;
-            }
-        } else {
-            Main.LOGGER.log(Level.FINE, "Creating templates for result file: " + resultFile.toString());
-        }
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(reviewFile, Main.UTF8))) {
-            template.toRaw().write(writer);
-        }
-        try (
-            BufferedWriter writer =
-                new BufferedWriter(
-                    new FileWriter(directory.resolve(String.format("%smitKommentaren.tex", prefix)).toFile(), Main.UTF8)
-                )
-        ) {
-            writer.write("\\documentclass{article}\n\n");
-            writer.write("\\usepackage{pdfpages}\n\n");
-            writer.write("\\pagestyle{empty}\n\n");
-            writer.write("\\begin{document}\n\n");
-            writer.write(String.format("\\includepdf[pages=-,fitpaper]{%s.pdf}\n\n", prefix));
-            writer.write("\\pagebreak\n\n");
-            writer.write("\\includepdf[pages=-,fitpaper]{thesisWithComments.pdf}\n\n");
-            writer.write("\\end{document}\n");
-        }
-    }
-
-    private static void createTextFileIfNotExists(final File resultFile) throws IOException, InterruptedException {
-        if (Arrays.stream(resultFile.getParentFile().list()).filter(name -> name.endsWith(".pdf")).count() != 1) {
-            return;
-        }
-        final File pdf =
-            Arrays
-            .stream(resultFile.getParentFile().listFiles())
-            .filter(file -> file.getName().endsWith(".pdf"))
-            .findAny()
-            .get();
-        final File directory = resultFile.getParentFile().getAbsoluteFile();
-        final File textFile = directory.toPath().resolve(Main.TEXT).toFile();
-        if (
-            !textFile.exists()
-            && new ProcessBuilder()
-            .directory(directory)
-            .command("cmd.exe", "/c", String.format("pdftotext \"%s\" text.txt", pdf.getName().replaceAll(" ", "\\ ")))
-            .start()
-            .waitFor() != 0
-        ) {
-            throw new IOException(
-                String.format(
-                    "Non-zero exit code! Command: pdftotext, Directory: %s, File: %s",
-                    directory.toString(),
-                    pdf.getName()
-                )
-            );
-        }
-    }
-
-    private static List<File> findResultFiles(final Path thesisTypePath, final int year) throws IOException {
-        final String yearString = String.valueOf(year);
-        Main.LOGGER.log(Level.FINE, "Finding result files in: " + thesisTypePath.toString());
-        return Files
-            .list(thesisTypePath)
-            .filter(p -> p.getFileName().toString().startsWith(yearString))
-            .map(p -> p.resolve(Main.RESULT))
-            .filter(p -> Files.exists(p))
-            .map(Path::toFile)
-            .toList();
-    }
-
-    private static List<File> findResultFiles(
-        final Path reviewerTypePath,
-        final ThesisType type,
-        final int year
-    ) throws IOException {
-        final List<File> result = new LinkedList<File>();
-        switch (type) {
-        case BA:
-            result.addAll(Main.findResultFiles(reviewerTypePath.resolve(Main.BACHELOR), year));
-            break;
-        case MA:
-            result.addAll(Main.findResultFiles(reviewerTypePath.resolve(Main.MASTER), year));
-            break;
-        case PA:
-            result.addAll(Main.findResultFiles(reviewerTypePath.resolve(Main.PA), year));
-            break;
-        case ALL_BUT_PA:
-            result.addAll(Main.findResultFiles(reviewerTypePath.resolve(Main.BACHELOR), year));
-            result.addAll(Main.findResultFiles(reviewerTypePath.resolve(Main.MASTER), year));
-            break;
-        default:
-            result.addAll(Main.findResultFiles(reviewerTypePath.resolve(Main.BACHELOR), year));
-            result.addAll(Main.findResultFiles(reviewerTypePath.resolve(Main.MASTER), year));
-            result.addAll(Main.findResultFiles(reviewerTypePath.resolve(Main.PA), year));
-        }
-        return result;
-    }
-
-    private static String formatYearForStatistics(final int year) {
-        return year > 0 ? String.valueOf(year) : "seit 2022";
-    }
-
-    private static String getTitle(final ReviewerType reviewer, final ThesisType type) {
-        return String.format("%s mit %s", type.title, reviewer.title);
-    }
-
-    private static boolean isEmptyAndOlderVersion(final Review review, final Review template) throws IOException {
-        return review.empty() != null && review.empty() && template.isOlderVersion(review.version());
-    }
-
-    private static boolean isLong(final File result) {
-        try {
-            return Files.lines(result.toPath()).toList().contains("long");
-        } catch (final IOException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    private static boolean isNotLong(final File result) {
-        return !Main.isLong(result);
-    }
-
-    private static void prepare(final File root, final int year) throws IOException, InterruptedException {
-        for (final File resultFile : Main.findAllResultFiles(root, year)) {
-            Main.LOGGER.log(Level.FINE, "Preparing result file: " + resultFile.toString());
-            Main.createTextFileIfNotExists(resultFile);
-            Main.createOrUpdateReviewFiles(resultFile, year);
-        }
-    }
-
-    private static void spellcheck(final File root, final int year) throws IOException, InterruptedException {
-        for (final File resultFile : Main.findAllResultFiles(root, year)) {
-            final File directory = resultFile.getParentFile().getAbsoluteFile();
-            final File errorsFile = directory.toPath().resolve(Main.ERROR).toFile();
-            final File reducedFile = directory.toPath().resolve(Main.REDUCED).toFile();
-            final String fileName = resultFile.toString();
-            Main.LOGGER.log(Level.FINE, "Spell checking result file: " + fileName);
-            if (
-                !errorsFile.exists()
-                && reducedFile.exists()
-                && new ProcessBuilder()
-                .directory(directory)
-                .command(
-                    "java",
-                    "-jar",
-                    "..\\..\\..\\..\\spella.jar",
-                    Main.REDUCED,
-                    Main.ERROR,
-                    "..\\..\\..\\..\\..\\templates\\personal.txt"
-                    ).start()
-                .waitFor() != 0
-            ) {
-                throw new IOException(
-                    String.format("Non-zero exit code! Command: spella, Directory: %s", directory.toString())
-                );
-            }
-            Main.LOGGER.log(Level.FINE, String.format("Spell checking %s done!", fileName));
-        }
-    }
-
-    private static void statistics(
-        final File root,
-        final ReviewerType reviewer,
-        final ThesisType type,
-        final List<Integer> years
-    ) throws IOException {
-        for (final int currentYear : years) {
-            Main.writeStatistics(
-                Main.getTitle(reviewer, type),
-                currentYear,
-                Main.countGrades(root, currentYear, reviewer, type),
-                root
-                .toPath()
-                .resolve(Main.STATISTICS)
-                .resolve(Main.toStatisticsFileName(reviewer, type, currentYear))
-                .toFile()
-            );
-        }
-    }
-
     private static void support(final File root) throws IOException {
         for (int year = 2022; year <= 2026; year++) {
-            for (final File resultFile : Main.findAllResultFiles(root, year)) {
+            for (final File resultFile : ResultFileFinder.findAllResultFiles(root, year)) {
                 System.out.println(resultFile);
             }
         }
-    }
-
-    private static String toStatisticsFileName(final ReviewerType reviewer, final ThesisType type, final int year) {
-        return String.format(
-            Main.STATISTICS_FILE,
-            reviewer.name().charAt(0) + reviewer.name().substring(1).toLowerCase(),
-            type.name(),
-            Main.toStatisticsFileNamePart(year)
-        );
-    }
-
-    private static String toStatisticsFileNamePart(final int year) {
-        return year > 0 ? String.valueOf(year) : "AllTime";
-    }
-
-    private static List<Thesis> toTheses(final List<File> resultFiles) {
-        return Main.toTheses(resultFiles.stream());
-    }
-
-    private static List<Thesis> toTheses(final Stream<File> stream) {
-        return stream.map(Thesis::fromFile).toList();
-    }
-
-    private static void writePoints(final Points points, final File file) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-            writer.write("Erstbetreuung Bachelorarbeiten: ");
-            writer.write(String.valueOf(points.bachelorFirst.size()));
-            writer.write("\nZweitgutachten Bachelorarbeiten (lang): ");
-            writer.write(String.valueOf(points.bachelorSecondLong.size()));
-            writer.write("\nZweitgutachten Bachelorarbeiten (kurz): ");
-            writer.write(String.valueOf(points.bachelorSecondShort.size()));
-            writer.write("\nErstbetreuung Masterarbeiten: ");
-            writer.write(String.valueOf(points.masterFirst.size()));
-            writer.write("\nZweitgutachten Masterarbeiten (lang): ");
-            writer.write(String.valueOf(points.masterSecondLong.size()));
-            writer.write("\nZweitgutachten Masterarbeiten (kurz): ");
-            writer.write(String.valueOf(points.masterSecondShort.size()));
-            writer.write("\nErstbetreuung Praxisarbeiten: ");
-            writer.write(String.valueOf(points.practicalThesesFirst.size()));
-            writer.write("\nZweitgutachten Praxisarbeiten (lang): ");
-            writer.write(String.valueOf(points.practicalThesesSecondLong.size()));
-            writer.write("\nZweitgutachten Praxisarbeiten (kurz): ");
-            writer.write(String.valueOf(points.practicalThesesSecondShort.size()));
-            writer.write("\nPraxischecks: ");
-            writer.write(String.valueOf(points.practicalCheck.size()));
-            writer.write("\n\nSumme: ");
-            writer.write(String.valueOf(points.sum()));
-            writer.write("\n\n\n");
-            writer.write("Details:\n\n");
-            Main.writeTheses("Erstbetreuung Bachelorarbeiten", points.bachelorFirst, writer);
-            Main.writeTheses("Zweitgutachten Bachelorarbeiten (lang)", points.bachelorSecondLong, writer);
-            Main.writeTheses("Zweitgutachten Bachelorarbeiten (kurz)", points.bachelorSecondShort, writer);
-            Main.writeTheses("Erstbetreuung Masterarbeiten", points.masterFirst, writer);
-            Main.writeTheses("Zweitgutachten Masterarbeiten (lang)", points.masterSecondLong, writer);
-            Main.writeTheses("Zweitgutachten Masterarbeiten (kurz)", points.masterSecondShort, writer);
-            Main.writeTheses("Erstbetreuung Praxisarbeiten", points.practicalThesesFirst, writer);
-            Main.writeTheses("Zweitgutachten Praxisarbeiten (lang)", points.practicalThesesSecondLong, writer);
-            Main.writeTheses("Zweitgutachten Praxisarbeiten (kurz)", points.practicalThesesSecondShort, writer);
-            writer.write("Praxischecks:\n");
-            for (final LocalDate date : points.practicalCheck) {
-                writer.write(date.toString());
-                writer.write("\n");
-            }
-            writer.write("\n");
-        }
-    }
-
-    private static void writeStatistics(
-        final String title,
-        final int year,
-        final int[] gradeCount,
-        final File file
-    ) throws IOException {
-        final int maxCount = Math.max(Arrays.stream(gradeCount).max().orElse(0) + 1, 6);
-        double average = 0;
-        int count = 0;
-        for (int i = 0; i < gradeCount.length; i++) {
-            count += gradeCount[i];
-            average += Main.GRADES[i] * gradeCount[i];
-        }
-        average = average / count;
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-            writer.write("\\documentclass[12pt]{article}\n\n");
-            writer.write("\\usepackage[a4paper,landscape,margin=1cm]{geometry}\n");
-            writer.write("\\usepackage{pgfplots}\n\n");
-            writer.write("\\pagestyle{empty}\n\n");
-            writer.write("\\begin{document}\n\n");
-            writer.write("\\pgfplotstableread[row sep=\\\\,col sep=&]{\n");
-            writer.write("    grade & number \\\\\n");
-            writer.write(String.format("    1.0   & %d \\\\\n", gradeCount[0]));
-            writer.write(String.format("    1.3   & %d \\\\\n", gradeCount[1]));
-            writer.write(String.format("    1.7   & %d \\\\\n", gradeCount[2]));
-            writer.write(String.format("    2.0   & %d \\\\\n", gradeCount[3]));
-            writer.write(String.format("    2.3   & %d \\\\\n", gradeCount[4]));
-            writer.write(String.format("    2.7   & %d \\\\\n", gradeCount[5]));
-            writer.write(String.format("    3.0   & %d \\\\\n", gradeCount[6]));
-            writer.write(String.format("    3.3   & %d \\\\\n", gradeCount[7]));
-            writer.write(String.format("    3.7   & %d \\\\\n", gradeCount[8]));
-            writer.write(String.format("    4.0   & %d \\\\\n", gradeCount[9]));
-            writer.write(String.format("    5.0   & %d \\\\\n", gradeCount[10]));
-            writer.write("    }\\mydata\n\n");
-            writer.write("\\vspace*{2cm}\n\n");
-            writer.write("\\begin{center}\n\n");
-            writer.write(
-                String.format(
-                    "{\\Huge \\textbf{Notenspiegel %s Ströder %s}}\n\n",
-                    title,
-                    Main.formatYearForStatistics(year)
-                )
-            );
-            writer.write("\\vspace*{1cm}\n\n");
-            writer.write("{\\large\n");
-            writer.write("\\begin{tikzpicture}\n");
-            writer.write("    \\begin{axis}[\n");
-            writer.write("            ybar,\n");
-            writer.write("            bar width=.5cm,\n");
-            writer.write("            width=0.8\\paperwidth,\n");
-            writer.write("            height=0.5\\paperheight,\n");
-            writer.write("            legend style={at={(0.5,1)},\n");
-            writer.write("                anchor=north,legend columns=-1},\n");
-            writer.write("            symbolic x coords={1.0,1.3,1.7,2.0,2.3,2.7,3.0,3.3,3.7,4.0,5.0},\n");
-            writer.write("            xtick=data,\n");
-            writer.write("            nodes near coords,\n");
-            writer.write("            nodes near coords align={vertical},\n");
-            writer.write(String.format("            ymin=0,ymax=%d,\n", maxCount));
-            writer.write("            ylabel={Anzahl},\n");
-            writer.write("            x label style={at={(axis description cs:0.5,-0.05)},anchor=north},\n");
-            writer.write("            xlabel={Note}\n");
-            writer.write("        ]\n");
-            writer.write("        \\addplot table[x=grade,y=number]{\\mydata};\n");
-            writer.write("    \\end{axis}\n");
-            writer.write("\\end{tikzpicture}\n");
-            writer.write("}\n\n");
-            writer.write("\\vspace*{8mm}\n\n");
-            writer.write(String.format(Locale.GERMAN, "Notendurchschnitt: %.1f\n\n", average));
-            writer.write(String.format(Locale.GERMAN, "$n = %d$\n\n", count));
-            writer.write("\\end{center}\n\n");
-            writer.write("\\end{document}\n");
-        }
-    }
-
-    private static void writeTheses(final String section, final List<Thesis> theses, final BufferedWriter writer)
-    throws IOException {
-        writer.write(section);
-        writer.write(":\n");
-        for (final Thesis thesis : theses) {
-            writer.write(thesis.name());
-            writer.write(": ");
-            writer.write(thesis.title());
-            writer.write("\n");
-        }
-        writer.write("\n");
     }
 
 }

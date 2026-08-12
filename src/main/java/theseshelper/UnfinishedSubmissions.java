@@ -19,7 +19,7 @@ public class UnfinishedSubmissions extends ArrayList<TopicSubmission> {
     public UnfinishedSubmissions(final File root, final List<Integer> years) throws IOException {
         this();
         for (final int currentYear : years) {
-            for (final File resultFile : Main.findAllResultFiles(root, currentYear)) {
+            for (final File resultFile : ResultFileFinder.findAllResultFiles(root, currentYear)) {
                 this.processResultFile(resultFile);
             }
         }

@@ -7,6 +7,8 @@ public enum Mode {
 
     CRITERIA("Pretty print criteria.", Set.of(Flag.INPUT)),
 
+    FINISH("Finish review.", Set.of(Flag.INPUT)),
+
     POINTS("Compute points for year.", Set.of(Flag.DIRECTORY, Flag.YEAR)),
 
     PREPARATION("Prepare theses for year.", Set.of(Flag.DIRECTORY, Flag.YEAR)),

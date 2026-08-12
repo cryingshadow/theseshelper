@@ -45,6 +45,14 @@ public record Result(
         }
     }
 
+    public boolean isLongReviewNotSet() {
+        return this.optionalLongReview().map(value -> !value).orElse(true);
+    }
+
+    public boolean isLongReviewSet() {
+        return this.optionalLongReview().orElse(false);
+    }
+
     public Optional<String> optionalThesisGrade() {
         return Optional.ofNullable(this.thesisgrade());
     }

@@ -14,21 +14,6 @@ public record ReviewEvaluationGroup(
     Boolean diagram
 ) {
 
-    public BigFraction evaluate(final BigFraction totalExpected, final BigFraction weightSum) {
-        final BigFraction innerTotal = this.total(totalExpected, weightSum);
-        final BigFraction innerWeightSum =
-            this.evaluations()
-            .stream()
-            .map(ReviewEvaluation::weightForSum)
-            .reduce(BigFraction.ZERO, (x, y) -> x.add(y));
-        return
-            this.evaluations()
-            .stream()
-            .map(e -> e.evaluate(innerTotal, innerWeightSum))
-            .reduce(BigFraction.ZERO, (x, y) -> x.add(y))
-            .add(this.adjust() == null ? BigFraction.ZERO : new BigFraction(this.adjust()));
-    }
-
     public boolean hasUnusedCriterion() {
         return this.evaluations().stream().anyMatch(ReviewEvaluation::unused);
     }
@@ -43,10 +28,6 @@ public record ReviewEvaluationGroup(
             this.space(),
             this.diagram()
         );
-    }
-
-    public BigFraction total(final BigFraction totalExpected, final BigFraction weightSum) {
-        return this.weight().divide(weightSum).multiply(totalExpected);
     }
 
 }

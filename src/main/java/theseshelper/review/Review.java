@@ -64,15 +64,6 @@ public record Review(
                 new BigFraction(Integer.parseInt(parts[0].strip()), Integer.parseInt(parts[1].strip()));
     }
 
-    public int evaluate() {
-        return
-            this.evaluationGroups()
-            .stream()
-            .map(g -> g.evaluate(this.totalExpected(), this.weightSum()).intValue())
-            .reduce(0, Integer::sum)
-            + (this.bonus() == null ? 0 : this.bonus().intValue());
-    }
-
     public boolean hasUnusedCriterion() {
         return this.evaluationGroups().stream().anyMatch(ReviewEvaluationGroup::hasUnusedCriterion);
     }
@@ -136,14 +127,6 @@ public record Review(
             this.totalExpected() == null ? "" : this.totalExpected().toString(),
             this.corner()
         );
-    }
-
-    public BigFraction weightSum() {
-        return
-            this.evaluationGroups()
-            .stream()
-            .map(ReviewEvaluationGroup::weight)
-            .reduce(BigFraction.ZERO, (x, y) -> x.add(y));
     }
 
 }
